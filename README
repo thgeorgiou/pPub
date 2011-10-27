@@ -1,0 +1,17 @@
+pPub 0.1 by Thanasis Georgiou <sakisds@gmx.com>
+A simple epub reader written with pygtk and pywebkit.
+It's licenced under GPLv2, please look at the COPYING file.
+
+Depands on:
+-python
+-pygtk
+-pywebkit
+-unzip
+
+A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
+
+Bookmarks are matched with the MD5 hash of each book so they are valid even if you rename or move your books.
+
+Default cache location is /tmp/ppub-cache/, you can change it by editing the configuration file (~/.ppub). If you do, keep the trailing '/' in the path.
+
+In case you have a book that is not working, please extract your epub file like a zip and send me any .opf and .ncx files it has inside. I will do my best to fix the problem then :).
