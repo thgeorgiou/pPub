@@ -126,7 +126,7 @@ class MainWindow: #Main window and it's magic
 
 pPub is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \nwithout even the implied warranty of \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licence for more details.
 
-You should have received a copy of the GNU General Public Licence along \nwith Glade; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301, USA.
+You should have received a copy of the GNU General Public Licence along \nwith pPub; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301, USA.
         """)
         self.about_dialog.connect("response", self.on_hide_about)
         
