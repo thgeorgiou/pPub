@@ -429,7 +429,7 @@ class ContentProvider(): #Manages book files and provides metadata
             shutil.rmtree(self.cache_path)
         
         #Extract book
-        os.system("unzip -d "+self.cache_path+" '"+filepath+"'")
+        os.system("unzip -d "+self.cache_path+" \""+filepath+"\"")
         
         #Find opf file
         if os.path.exists(self.cache_path+"META-INF/container.xml"):
