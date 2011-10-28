@@ -411,6 +411,11 @@ class Viewer(webkit.WebView): #Renders the book
         webkit.WebView.__init__(self)
         settings = self.get_settings()
         self.set_full_content_zoom(True)
+        settings.props.enable_scripts = False
+        settings.props.enable_plugins = False
+        settings.props.enable_page_cache = False
+        settings.props.enable_java_applet = False
+        settings.props.enable_webgl = False
         settings.props.enable_default_context_menu = False
 
 class ContentProvider(): #Manages book files and provides metadata
@@ -474,11 +479,6 @@ class ContentProvider(): #Manages book files and provides metadata
         
     def get_chapter_file(self, number): #Returns a chapter file
         self.current_chapter = number
-        #if self.oebps:
-        #    return self.cache_path+"OEBPS/"+self.files[number]
-        #else:
-        #    return self.cache_path+"/"+self.files[number]
-        print os.path.join((self.cache_path, self.oebps, self.files[number]))
         return self.cache_path+"/"+self.oebps+"/"+self.files[number]
     
     def get_chapter_count(self): #Returns number of chapters
