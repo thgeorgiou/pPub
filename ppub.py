@@ -444,6 +444,10 @@ class ContentProvider(): #Manages book files and provides metadata
             for x in metadata.manifest.item:
                 if x.media_type == "application/xhtml+xml":
                      self.files.append(x.href)
+            if os.path.exists(self.cache_path+"OEBPS/"+self.files[0]):
+                self.oebps = True
+            else:
+                self.oebps = False
                      
             #Calculate MD5 of book (for bookmarks)
             md5 = hashlib.md5()
@@ -473,7 +477,10 @@ class ContentProvider(): #Manages book files and provides metadata
         
     def get_chapter_file(self, number): #Returns a chapter file
         self.current_chapter = number
-        return self.cache_path+"OEBPS/"+self.files[number]
+        if self.oebps:
+            return self.cache_path+"OEBPS/"+self.files[number]
+        else:
+            return self.cache_path+"/"+self.files[number]
     
     def get_chapter_count(self): #Returns number of chapters
         return len(self.files)-1
