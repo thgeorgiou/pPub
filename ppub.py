@@ -196,8 +196,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
         
-        menu_zoom_in.add_accelerator("activate", self.accel_group, ord("+"), gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
-        menu_zoom_in.add_accelerator("activate", self.accel_group, ord("-"), gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+        menu_zoom_in.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>KP_Add")[0], gtk.accelerator_parse("<Control>KP_Add")[1], gtk.ACCEL_VISIBLE)
+        menu_zoom_out.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>KP_Subtract")[0], gtk.accelerator_parse("<Control>KP_Subtract")[1], gtk.ACCEL_VISIBLE)
         
         menu_zoom_in.connect("activate", self.on_zoom_in)
         menu_zoom_out.connect("activate", self.on_zoom_out)
