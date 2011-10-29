@@ -174,12 +174,39 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_prev_ch.connect("activate", self.on_prev_chapter)
         self.menu_jump_ch.connect("activate", self.on_jump_chapter) 
         
-        self.menu_next_ch.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>Right")[0], gtk.accelerator_parse("<Control>Right")[1], gtk.ACCEL_VISIBLE)
-        self.menu_prev_ch.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>Left")[0], gtk.accelerator_parse("<Control>Left")[1], gtk.ACCEL_VISIBLE)
+        #self.menu_next_ch.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>Right")[0], gtk.accelerator_parse("<Control>Right")[1], gtk.ACCEL_VISIBLE)
+        #self.menu_prev_ch.add_accelerator("activate", self.accel_group, gtk.accelerator_parse("<Control>Left")[0], gtk.accelerator_parse("<Control>Left")[1], gtk.ACCEL_VISIBLE)
         
         go_m = gtk.MenuItem("Go")
         go_m.set_submenu(go_menu)
         menubar.append(go_m)
+        
+        #View menu
+        view_menu = gtk.Menu()
+        
+        menu_zoom_in = gtk.MenuItem("Zoom in")
+        menu_zoom_out = gtk.MenuItem("Zoom out")
+        menu_reset_zoom = gtk.MenuItem("Reset zoom level")
+        menu_view_sep = gtk.SeparatorMenuItem()
+        menu_enable_caret = gtk.CheckMenuItem("Caret")
+        
+        view_menu.append(menu_zoom_in)
+        view_menu.append(menu_zoom_out)
+        view_menu.append(menu_reset_zoom)
+        view_menu.append(menu_view_sep)
+        view_menu.append(menu_enable_caret)
+        
+        menu_zoom_in.add_accelerator("activate", self.accel_group, ord("+"), gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+        menu_zoom_in.add_accelerator("activate", self.accel_group, ord("-"), gtk.gdk.CONTROL_MASK, gtk.ACCEL_VISIBLE)
+        
+        menu_zoom_in.connect("activate", self.on_zoom_in)
+        menu_zoom_out.connect("activate", self.on_zoom_out)
+        menu_reset_zoom.connect("activate", self.on_reset_zoom)
+        menu_enable_caret.connect("activate", self.on_toggle_caret)
+        
+        view_m = gtk.MenuItem("View")
+        view_m.set_submenu(view_menu)
+        menubar.append(view_m)
         
         #Bookmarks Menu
         self.bookmarks_menu = gtk.Menu()
@@ -225,6 +252,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #Viewer (pywebgtk)
         self.viewer = Viewer()
         self.viewer.load_uri("about:blank")
+        
+        self.viewer.connect("key-press-event", self.on_keypress_viewer)
         
         self.current_bookmark = 0
         
@@ -306,6 +335,19 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter-1))
         self.update_go_menu()
     
+    def on_zoom_in(self, widget, data=None): #Zooms in
+        self.viewer.props.zoom_level = self.viewer.props.zoom_level + 0.1
+    
+    def on_zoom_out(self, widget, data=None): #Zooms out
+        self.viewer.props.zoom_level = self.viewer.props.zoom_level - 0.1
+    
+    def on_reset_zoom(self, widget, data=None): #Resets zoom
+        self.viewer.props.zoom_level = 1.0
+        
+    def on_toggle_caret(self, widget, data=None): #Toggles caret browsing
+        settings = self.viewer.get_settings()
+        settings.props.enable_caret_browsing = widget.get_active()
+        
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
         md5_hash = self.provider.book_md5
         current_bookmark = int(self.config.get(md5_hash, "count"))+1
@@ -383,7 +425,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         
     def on_hide_about(self, widget, data=None): #Hide about screen
         self.about_dialog.hide()
-        
+    
+    def on_keypress_viewer(self, widget, data): #Change chapters on right/left
+        keyval = gtk.gdk.keyval_name(data.keyval)
+        if keyval == "Right" and self.menu_next_ch.get_sensitive():
+            self.on_next_chapter(widget)
+        elif keyval == "Left" and self.menu_prev_ch.get_sensitive():
+            self.on_prev_chapter(widget)
+            
     def on_open(self, widget, data=None): #Show open dialog
         dialog = OpenDialog("Select book...", None, gtk.FILE_CHOOSER_ACTION_OPEN, (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL, gtk.STOCK_OPEN, gtk.RESPONSE_OK), self.open_book)
         dialog.run()
@@ -417,6 +466,7 @@ class Viewer(webkit.WebView): #Renders the book
         settings.props.enable_java_applet = False
         settings.props.enable_webgl = False
         settings.props.enable_default_context_menu = False
+        settings.props.enable_html5_local_storage = False
 
 class ContentProvider(): #Manages book files and provides metadata
     def __init__(self, config):
