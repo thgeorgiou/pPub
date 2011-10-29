@@ -120,7 +120,7 @@ class MainWindow: #Main window and it's magic
         #About Window
         self.about_dialog = gtk.AboutDialog()
         self.about_dialog.set_program_name("pPub")
-        self.about_dialog.set_version("0.2")
+        self.about_dialog.set_version("0.3")
         self.about_dialog.set_copyright("by Thanasis Georgiou")
         self.about_dialog.set_license("""pPub is free software; you can redistribute it and/or modify it under the \nterms of the GNU General Public Licence as published by the Free Software Foundation; \neither version 2 of the Licence, or (at your option) any later version.
 
