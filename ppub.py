@@ -464,7 +464,10 @@ class Viewer(webkit.WebView): #Renders the book
         settings.props.enable_plugins = False
         settings.props.enable_page_cache = False
         settings.props.enable_java_applet = False
-        settings.props.enable_webgl = False
+        try:
+            settings.props.enable_webgl = False
+        except AttributeError:
+            pass
         settings.props.enable_default_context_menu = False
         settings.props.enable_html5_local_storage = False
 
