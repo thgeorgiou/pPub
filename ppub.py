@@ -3,8 +3,7 @@
 # pPub by Thanasis Georgiou <sakisds@gmx.com>
 
 # pPub is free software; you can redistribute it and/or modify it under the terms
-# of the GNU General Public Licence as published by the Free Software Foundation;
-# neither version 2 of the Licence, or (at your option) any later version.
+# of the GNU General Public Licence as published by the Free Software Foundation.
 
 # pPub is distributed in the hope that it will be useful, but WITHOUT ANY
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
@@ -22,6 +21,7 @@ import re
 import xml.sax.handler
 import ConfigParser
 import hashlib
+import getpass
 
 def xml2obj(src): #Converts xml to an object
     non_id_char = re.compile('[^_0-9a-zA-Z]')
@@ -114,7 +114,7 @@ class MainWindow: #Main window and it's magic
             self.config.read(os.path.expanduser(os.path.join("~",".ppub.conf")))
         else:
             self.config.add_section("Main")
-            self.config.set("Main", "cacheDir", "/tmp/ppub-cache/")
+            self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
             self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
         
         ##Create UI
@@ -134,7 +134,7 @@ class MainWindow: #Main window and it's magic
         self.about_dialog.set_program_name("pPub")
         self.about_dialog.set_version("0.3")
         self.about_dialog.set_copyright("by Thanasis Georgiou")
-        self.about_dialog.set_license("""pPub is free software; you can redistribute it and/or modify it under the \nterms of the GNU General Public Licence as published by the Free Software Foundation; \neither version 2 of the Licence, or (at your option) any later version.
+        self.about_dialog.set_license("""pPub is free software; you can redistribute it and/or modify it under the \nterms of the GNU General Public Licence as published by the Free Software Foundation.
 
 pPub is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \nwithout even the implied warranty of \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public Licence for more details.
 
