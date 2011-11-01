@@ -516,6 +516,8 @@ class ContentProvider(): #Manages book files and provides metadata
         
         #Extract book
         os.system("unzip -d "+self.cache_path+" \""+filepath+"\"")
+        #Set permissions
+        os.system("chmod 700 "+self.cache_path)
         
         #Find opf file
         if os.path.exists(self.cache_path+"META-INF/container.xml"):
