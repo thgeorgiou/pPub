@@ -316,7 +316,6 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.menu_prev_ch.set_sensitive(True)
     
     def update_zoom_menu(self): #Update zoom menu items
-        print self.viewer.props.zoom_level
         if self.viewer.props.zoom_level > 3.0:
             self.menu_zoom_in.set_sensitive(False)
         else:
