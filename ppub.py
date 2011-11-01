@@ -348,6 +348,9 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
         self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        cache_dir = self.config.get("Main", "cacheDir")
+        if os.path.exists(cache_dir):
+            shutil.rmtree(cache_dir)
         Gtk.main_quit()
             
     def on_next_chapter(self, widget, data=None): #View next chapter
