@@ -196,23 +196,23 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #View menu
         view_menu = Gtk.Menu()
         
-        menu_zoom_in = Gtk.MenuItem(label="Zoom in")
-        menu_zoom_out = Gtk.MenuItem(label="Zoom out")
+        self.menu_zoom_in = Gtk.MenuItem(label="Zoom in")
+        self.menu_zoom_out = Gtk.MenuItem(label="Zoom out")
         menu_reset_zoom = Gtk.MenuItem(label="Reset zoom level")
         menu_view_sep = Gtk.SeparatorMenuItem()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         
-        view_menu.append(menu_zoom_in)
-        view_menu.append(menu_zoom_out)
+        view_menu.append(self.menu_zoom_in)
+        view_menu.append(self.menu_zoom_out)
         view_menu.append(menu_reset_zoom)
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
         
-        menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
-        menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
+        self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
+        self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
         
-        menu_zoom_in.connect("activate", self.on_zoom_in)
-        menu_zoom_out.connect("activate", self.on_zoom_out)
+        self.menu_zoom_in.connect("activate", self.on_zoom_in)
+        self.menu_zoom_out.connect("activate", self.on_zoom_out)
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
         
@@ -314,7 +314,18 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.menu_prev_ch.set_sensitive(False)
         else:
             self.menu_prev_ch.set_sensitive(True)
-        
+    
+    def update_zoom_menu(self): #Update zoom menu items
+        print self.viewer.props.zoom_level
+        if self.viewer.props.zoom_level > 3.0:
+            self.menu_zoom_in.set_sensitive(False)
+        else:
+            self.menu_zoom_in.set_sensitive(True)
+            if self.viewer.props.zoom_level < 0.3:
+                self.menu_zoom_out.set_sensitive(False)
+            else:
+                self.menu_zoom_out.set_sensitive(True)
+            
     def update_bookmarks_menu(self): #Reloads bookmarks
         for x in self.bookmarks:
             x.hide()
@@ -349,12 +360,15 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     
     def on_zoom_in(self, widget, data=None): #Zooms in
         self.viewer.props.zoom_level = self.viewer.props.zoom_level + 0.1
+        self.update_zoom_menu()
     
     def on_zoom_out(self, widget, data=None): #Zooms out
         self.viewer.props.zoom_level = self.viewer.props.zoom_level - 0.1
+        self.update_zoom_menu()
     
     def on_reset_zoom(self, widget, data=None): #Resets zoom
         self.viewer.props.zoom_level = 1.0
+        self.update_zoom_menu()
         
     def on_toggle_caret(self, widget, data=None): #Toggles caret browsing
         settings = self.viewer.get_settings()
