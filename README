@@ -4,8 +4,9 @@ It's licenced under GPLv2, please look at the COPYING file.
 
 Depands on:
 -python
--pygtk
--pywebkit
+-pygobject (>= 2.21.4)
+-GTK+ GI binding
+-WebKit GI binding
 -unzip
 
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
