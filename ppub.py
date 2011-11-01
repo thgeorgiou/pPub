@@ -692,12 +692,12 @@ class DeleteBookmarksDialog(Gtk.Dialog):
 
     def create_columns(self, tree_view): #Create columns for tree view
         renderer_text = Gtk.CellRendererText()
-        column = Gtk.TreeViewColumn("Chapter", renderer_text, text=0)
+        column = Gtk.TreeViewColumn("Number", renderer_text, text=0)
         column.set_sort_column_id(0)    
         tree_view.append_column(column)
         
         renderer_text = Gtk.CellRendererText()
-        column = Gtk.TreeViewColumn("Place", renderer_text, text=1)
+        column = Gtk.TreeViewColumn("Chapter", renderer_text, text=1)
         column.set_sort_column_id(1)
         tree_view.append_column(column)
     
