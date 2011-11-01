@@ -645,7 +645,6 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         self.book_md5 = book_md5
         self.set_size_request(350, 250)
         self.activation_action = action
-        self.vbox = self.get_content_area()
         
         #Label
         label = Gtk.Label("Double click a bookmark to delete.")
