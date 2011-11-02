@@ -11,6 +11,11 @@ Depands on:
 
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
 
+NOTE: If it doesn't run and it complains something about self.config, please delete your ~/.ppub.conf file and try again.
+You can also add these two lines under [Main]:
+js = False
+caret = False
+
 Bookmarks are matched with the MD5 hash of each book so they are valid even if you rename or move your books.
 
 Default cache location is /tmp/ppub-cache-[username]/, you can change it by editing the configuration file (~/.ppub). If you do, keep the trailing '/' in the path.
