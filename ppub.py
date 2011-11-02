@@ -262,6 +262,16 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.window.show_all()
         #Create a content provider
         self.provider = ContentProvider(self.config)
+        #Load settings from config
+        settings = self.viewer.get_settings()
+        if self.config.get("Main", "js") == "True":
+            menu_enable_js.set_active(True)
+        else:
+            menu_enable_js.set_active(False)
+        if self.config.get("Main", "caret") == "True":
+            menu_enable_caret.set_active(True)
+        else:
+            menu_enable_caret.set_active(False)
         #Check if there are any command line arguments
         if len(sys.argv) == 2:
             #Load book
@@ -333,6 +343,9 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
+        settings = self.viewer.get_settings()
+        self.config.set("Main", "js", settings.props.enable_scripts)
+        self.config.set("Main", "caret", settings.props.enable_caret_browsing)
         self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
         cache_dir = self.config.get("Main", "cacheDir")
         if os.path.exists(cache_dir):
@@ -487,6 +500,7 @@ class Viewer(WebKit.WebView): #Renders the book
         settings.props.enable_plugins = False
         settings.props.enable_page_cache = False
         settings.props.enable_java_applet = False
+        #settings.props.user_stylesheet_uri = "file://~/style.css"
         try:
             settings.props.enable_webgl = False
         except AttributeError:
