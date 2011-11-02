@@ -154,7 +154,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         file_menu = Gtk.Menu()
         
         menu_open = Gtk.MenuItem(label="Open")
-        file_menu_sep = Gtk.SeparatorMenuItem()
+        file_menu_sep = Gtk.SeparatorMenuItem.new()
+        file_menu_sep.set_sensitive(True)
         menu_exit = Gtk.MenuItem(label="Exit")
         
         file_menu.append(menu_open)
@@ -199,7 +200,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_zoom_in = Gtk.MenuItem(label="Zoom in")
         self.menu_zoom_out = Gtk.MenuItem(label="Zoom out")
         menu_reset_zoom = Gtk.MenuItem(label="Reset zoom level")
-        menu_view_sep = Gtk.SeparatorMenuItem()
+        menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         
         view_menu.append(self.menu_zoom_in)
@@ -226,7 +227,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         
         self.menu_add_bookmark = Gtk.MenuItem(label="Add Bookmark")
         self.menu_delete_bookmarks = Gtk.MenuItem(label="Delete Boomarks...")
-        bookmarks_menu_sep = Gtk.SeparatorMenuItem()
+        bookmarks_menu_sep = Gtk.SeparatorMenuItem.new()
         
         self.bookmarks_menu.append(self.menu_add_bookmark)
         self.bookmarks_menu.append(self.menu_delete_bookmarks)
