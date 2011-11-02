@@ -200,12 +200,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         menu_reset_zoom.set_label("Reset zoom level")
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
+        menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
         
         view_menu.append(self.menu_zoom_in)
         view_menu.append(self.menu_zoom_out)
         view_menu.append(menu_reset_zoom)
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
+        view_menu.append(menu_enable_js)
         
         self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
         self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
@@ -214,6 +216,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_zoom_out.connect("activate", self.on_zoom_out)
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
+        menu_enable_js.connect("activate", self.on_toggle_js)
         
         view_m = Gtk.MenuItem(label="View")
         view_m.set_submenu(view_menu)
@@ -374,7 +377,13 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     def on_toggle_caret(self, widget, data=None): #Toggles caret browsing
         settings = self.viewer.get_settings()
         settings.props.enable_caret_browsing = widget.get_active()
-        
+    
+    def on_toggle_js(self, widget, data=None):
+        settings = self.viewer.get_settings()
+        settings.props.enable_scripts = widget.get_active()
+        if self.provider.ready:
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
+            
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
         md5_hash = self.provider.book_md5
         current_bookmark = int(self.config.get(md5_hash, "count"))+1
