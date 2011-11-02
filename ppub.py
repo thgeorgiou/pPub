@@ -587,7 +587,7 @@ class JumpChapterDialog(Gtk.Dialog): #Chapters>Jump dialog
         super(JumpChapterDialog, self).__init__()        
         label = Gtk.Label("Enter chapter number:")
         label.show()
-        self.vbox = self.get_content_area()
+        #self.vbox = self.get_content_area()
         self.vbox.pack_start(label, True, True, 0)
         #Create entry box
         self.entry = Gtk.Entry()
@@ -664,7 +664,6 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         while i != count:
             i += 1
             store.append((i, "Chapter "+str(self.config.get(self.book_md5, str(i)+"-ch"))))
-            
         return store
 
     def create_columns(self, tree_view): #Create columns for tree view
