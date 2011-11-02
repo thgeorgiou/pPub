@@ -153,10 +153,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         ##File Menu
         file_menu = Gtk.Menu()
         
-        menu_open = Gtk.MenuItem(label="Open")
+        menu_open = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_OPEN, None)
         file_menu_sep = Gtk.SeparatorMenuItem.new()
         file_menu_sep.set_sensitive(True)
-        menu_exit = Gtk.MenuItem(label="Exit")
+        menu_exit = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT, None)
         
         file_menu.append(menu_open)
         file_menu.append(file_menu_sep)
@@ -187,9 +187,6 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_prev_ch.connect("activate", self.on_prev_chapter)
         self.menu_jump_ch.connect("activate", self.on_jump_chapter) 
         
-        #self.menu_next_ch.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>Right")[0], Gtk.accelerator_parse("<Control>Right")[1], Gtk.ACCEL_VISIBLE)
-        #self.menu_prev_ch.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>Left")[0], Gtk.accelerator_parse("<Control>Left")[1], Gtk.ACCEL_VISIBLE)
-        
         go_m = Gtk.MenuItem(label="Go")
         go_m.set_submenu(go_menu)
         menubar.append(go_m)
@@ -197,9 +194,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #View menu
         view_menu = Gtk.Menu()
         
-        self.menu_zoom_in = Gtk.MenuItem(label="Zoom in")
-        self.menu_zoom_out = Gtk.MenuItem(label="Zoom out")
-        menu_reset_zoom = Gtk.MenuItem(label="Reset zoom level")
+        self.menu_zoom_in = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_IN, None)
+        self.menu_zoom_out = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_OUT, None)
+        menu_reset_zoom = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_100, None)
+        menu_reset_zoom.set_label("Reset zoom level")
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         
@@ -244,8 +242,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         
         #Help menu
         help_menu = Gtk.Menu()
-        
-        menu_about = Gtk.MenuItem(label="About")
+
+        menu_about = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
         
         help_menu.append(menu_about)
         
