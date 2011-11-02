@@ -115,6 +115,8 @@ class MainWindow: #Main window and it's magic
         else:
             self.config.add_section("Main")
             self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
+            self.config.set("Main", "js", "False")
+            self.config.set("Main", "caret", "False")
             self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
         ##Create UI
         #Window
