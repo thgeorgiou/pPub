@@ -116,19 +116,15 @@ class MainWindow: #Main window and it's magic
             self.config.add_section("Main")
             self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
             self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
-        
         ##Create UI
         #Window
         self.window = Gtk.Window()
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
-        
         self.window.connect("destroy", self.on_exit)
-        
         # Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
-        
         #About Window
         self.about_dialog = Gtk.AboutDialog()
         self.about_dialog.set_program_name("pPub")
@@ -141,59 +137,54 @@ pPub is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY
 You should have received a copy of the GNU General Public Licence along \nwith pPub; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301, USA.
         """)
         self.about_dialog.connect("response", self.on_hide_about)
-        
         #Container
         container = Gtk.VBox()
         self.window.add(container)
-        
         #Menu bar
         menubar = Gtk.MenuBar()
         container.pack_start(menubar, False, False, 0)
-        
         ##File Menu
         file_menu = Gtk.Menu()
-        
+        #Create items
         menu_open = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_OPEN, None)
         file_menu_sep = Gtk.SeparatorMenuItem.new()
         file_menu_sep.set_sensitive(True)
         menu_exit = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT, None)
-        
+        #Add them to menu
         file_menu.append(menu_open)
         file_menu.append(file_menu_sep)
         file_menu.append(menu_exit)
-        
-        menu_open.add_accelerator("activate", self.accel_group, ord("O"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
-        menu_exit.add_accelerator("activate", self.accel_group, ord("Q"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
-        
+        #Actions
         menu_open.connect("activate", self.on_open)
         menu_exit.connect("activate", self.on_exit)
-        
+        #Accelerators
+        menu_open.add_accelerator("activate", self.accel_group, ord("O"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
+        menu_exit.add_accelerator("activate", self.accel_group, ord("Q"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
+        #Add menu to menubar
         file_m = Gtk.MenuItem(label="File")
         file_m.set_submenu(file_menu)
         menubar.append(file_m)
-        
-        #Chapter Menu
+        ##Chapter Menu
         go_menu = Gtk.Menu()
-        
+        #Create items
         self.menu_next_ch = Gtk.MenuItem(label="Next Chapter")
         self.menu_prev_ch = Gtk.MenuItem(label="Previous Chapter")
         self.menu_jump_ch = Gtk.MenuItem(label="Jump to Chapter...")
-        
+        #Add them to menu
         go_menu.append(self.menu_next_ch)
         go_menu.append(self.menu_prev_ch)
         go_menu.append(self.menu_jump_ch)
-        
+        #Actions
         self.menu_next_ch.connect("activate", self.on_next_chapter)
         self.menu_prev_ch.connect("activate", self.on_prev_chapter)
         self.menu_jump_ch.connect("activate", self.on_jump_chapter) 
-        
+        #Add menu to menubar
         go_m = Gtk.MenuItem(label="Go")
         go_m.set_submenu(go_menu)
         menubar.append(go_m)
-        
-        #View menu
+        ##View menu
         view_menu = Gtk.Menu()
-        
+        #Create items
         self.menu_zoom_in = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_IN, None)
         self.menu_zoom_out = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_OUT, None)
         menu_reset_zoom = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_100, None)
@@ -201,84 +192,76 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
-        
+        #Add them to menu
         view_menu.append(self.menu_zoom_in)
         view_menu.append(self.menu_zoom_out)
         view_menu.append(menu_reset_zoom)
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
         view_menu.append(menu_enable_js)
-        
-        self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
-        self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
-        
+        #Actions
         self.menu_zoom_in.connect("activate", self.on_zoom_in)
         self.menu_zoom_out.connect("activate", self.on_zoom_out)
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
         menu_enable_js.connect("activate", self.on_toggle_js)
-        
+        #Accelerators
+        self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
+        self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
+        #Add menu to menubar
         view_m = Gtk.MenuItem(label="View")
         view_m.set_submenu(view_menu)
         menubar.append(view_m)
-        
-        #Bookmarks Menu
+        ##Bookmarks Menu
         self.bookmarks_menu = Gtk.Menu()
         self.bookmarks = []
-        
+        #Create items
         self.menu_add_bookmark = Gtk.MenuItem(label="Add Bookmark")
         self.menu_delete_bookmarks = Gtk.MenuItem(label="Delete Boomarks...")
         bookmarks_menu_sep = Gtk.SeparatorMenuItem.new()
-        
+        #Add them to menu
         self.bookmarks_menu.append(self.menu_add_bookmark)
         self.bookmarks_menu.append(self.menu_delete_bookmarks)
         self.bookmarks_menu.append(bookmarks_menu_sep)
-        
+        #Actions
         self.menu_add_bookmark.connect("activate", self.on_add_bookmark)
         self.menu_delete_bookmarks.connect("activate", self.on_delete_bookmarks)
-        
+        #Accelerators
         self.menu_add_bookmark.add_accelerator("activate", self.accel_group, ord("B"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
-        
+        #Add menu to menubar
         bookmarks_m = Gtk.MenuItem(label="Bookmarks")
         bookmarks_m.set_submenu(self.bookmarks_menu)
         menubar.append(bookmarks_m)
-        
-        #Help menu
+        ##Help menu
         help_menu = Gtk.Menu()
-
+        #Create items
         menu_about = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
-        
+        #Add them to menu
         help_menu.append(menu_about)
-        
+        #Actions
         menu_about.connect("activate", self.on_about)
-        
+        #Add menu to menubar
         help_m = Gtk.MenuItem(label="Help")
         help_m.set_submenu(help_menu)
         menubar.append(help_m)
-        
         #Scrollable Window for Viewer
         self.scr_window = Gtk.ScrolledWindow()
         self.scr_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark)        
-                
+        self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark)
         container.pack_end(self.scr_window, True, True, 0)
-        
-        #Viewer (pywebgtk)
+        ##Viewer (pywebgtk)
         self.viewer = Viewer()
         self.viewer.load_uri("about:blank")
-        
+        #Actions
         self.viewer.connect("key-press-event", self.on_keypress_viewer)
-        
+        #Default option
         self.current_bookmark = 0
-        
+        #Add to window
         self.scr_window.add(self.viewer)
-                
         #Show window
         self.window.show_all()
-        
         #Create a content provider
-        self.provider = ContentProvider(self.config)    
-
+        self.provider = ContentProvider(self.config)
         #Check if there are any command line arguments
         if len(sys.argv) == 2:
             #Load book
@@ -303,7 +286,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_add_bookmark.set_sensitive(False)
         self.menu_delete_bookmarks.set_sensitive(False)
     
-    def enable_bookmark_menus(self):
+    def enable_bookmark_menus(self): #Enables bookmarks menu items
         self.menu_add_bookmark.set_sensitive(True)
         self.menu_delete_bookmarks.set_sensitive(True)
         
@@ -318,9 +301,11 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.menu_prev_ch.set_sensitive(True)
     
     def update_zoom_menu(self): #Update zoom menu items
+        #Don't zoom if zoom level is over 300%
         if self.viewer.props.zoom_level > 3.0:
             self.menu_zoom_in.set_sensitive(False)
         else:
+            #Don't zoom if zoom level is less than 30%
             self.menu_zoom_in.set_sensitive(True)
             if self.viewer.props.zoom_level < 0.3:
                 self.menu_zoom_out.set_sensitive(False)
@@ -328,20 +313,20 @@ You should have received a copy of the GNU General Public Licence along \nwith p
                 self.menu_zoom_out.set_sensitive(True)
             
     def update_bookmarks_menu(self): #Reloads bookmarks
+        #Remove old bookmarks from menu
         for x in self.bookmarks:
             x.hide()
-            
+            del x    
         self.bookmarks = []
-        
+        #Load new ones
         count = int(self.config.get(self.provider.book_md5, "count"))
         i = 0
         while i != count:
             i += 1
-            
             x = Bookmark(str(i)+". Chapter "+str(self.config.get(self.provider.book_md5, str(i)+"-ch")), i)
             x.connect("activate", self.on_open_bookmark)
-            
             self.bookmarks.append(x)
+        #Add them to menu
         for x in self.bookmarks:
             self.bookmarks_menu.append(x)
             x.show()
@@ -378,9 +363,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         settings = self.viewer.get_settings()
         settings.props.enable_caret_browsing = widget.get_active()
     
-    def on_toggle_js(self, widget, data=None):
+    def on_toggle_js(self, widget, data=None): #Toggles javascript
         settings = self.viewer.get_settings()
         settings.props.enable_scripts = widget.get_active()
+        #Reload page if needed
         if self.provider.ready:
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
             
@@ -396,57 +382,60 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         bookmark = widget.bookmark_id
         chapter = int(self.config.get(self.provider.book_md5, str(bookmark)+"-ch"))
         pos = float(self.config.get(self.provider.book_md5, str(bookmark)+"-pos"))
-        
+        #Load current chapter
         self.current_bookmark = pos
         self.viewer.load_uri("file://"+self.provider.get_chapter_file(chapter))
         
-    def check_current_bookmark(self, widget, data=None):
+    def check_current_bookmark(self, widget, data=None): #Scroll to bookmark if needed
         if self.current_bookmark != 0:
             self.scr_window.get_vadjustment().set_value(self.current_bookmark)
-            self.current_bookmark == 0
+            self.current_bookmark = 0
     
-    def on_delete_bookmarks(self, widget, data=None):
+    def on_delete_bookmarks(self, widget, data=None): #Shows delete bookmarks dialog
         dialog = DeleteBookmarksDialog(self.config, self.provider.book_md5, self.dialog_bookmarks_activated)
         dialog.run()
     
     def dialog_bookmarks_activated(self, widget, data, row=None):
+        #Delete bookmark
         bookmark_id = data.get_indices()[0] + 1
         self.config.remove_option(self.provider.book_md5, str(bookmark_id)+"-ch")
         self.config.remove_option(self.provider.book_md5, str(bookmark_id)+"-pos")
-        
+        #Rewrite all other bookmarks with correct numbering
         count = int(self.config.get(self.provider.book_md5, "count"))
         self.config.set(self.provider.book_md5, "count", count-1)
-        
         old_data_ch = []
         old_data_pos = []
         i = 0
+        #Save all bookmarks in temporary space
         while i != count:
             i += 1
             if i != bookmark_id:
                 old_data_ch.append(self.config.get(self.provider.book_md5, str(i)+"-ch"))
                 old_data_pos.append(self.config.get(self.provider.book_md5, str(i)+"-pos"))
-            
+                #Delete bookmark from file
                 self.config.remove_option(self.provider.book_md5, str(i)+"-ch")
                 self.config.remove_option(self.provider.book_md5, str(i)+"-pos")
-                
         i = 0
+        #Rewrite them to config
         while i != count-1:
             i += 1
             self.config.set(self.provider.book_md5, str(i)+"-ch", old_data_ch[i-1])
             self.config.set(self.provider.book_md5, str(i)+"-pos", old_data_pos[i-1])
         del old_data_ch
         del old_data_pos
-        
+        #Update the menu
         self.update_bookmarks_menu()
+        #Save config
+        self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
             
     def on_jump_chapter(self, widget, data=None): #Jump to given chapters
         dialog = JumpChapterDialog()        
         answer = dialog.run()
-        
+        #Check if answer is actually a chapter
         if answer == 0:
             input_data = int(dialog.get_text())
             dialog.destroy()
-            
+            #and act
             if input_data <= self.provider.get_chapter_count:
                 self.viewer.load_uri("file://"+self.provider.get_chapter_file(input_data))
             else:
@@ -481,11 +470,9 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.update_go_menu()
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
-            
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
-            self.menu_jump_ch.set_sensitive(True)
-                        
+            self.menu_jump_ch.set_sensitive(True)   
         else:
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
@@ -512,7 +499,6 @@ class ContentProvider(): #Manages book files and provides metadata
         #Check if needed folder exists
         self.config = config
         self.cache_path = self.config.get("Main", "cacheDir")
-        
         if not os.path.exists(self.cache_path):
             os.mkdir(self.cache_path)
         self.ready = False
@@ -521,43 +507,35 @@ class ContentProvider(): #Manages book files and provides metadata
         #Clear any old files from the cache and extract the current book 
         if os.path.exists(self.cache_path):
             shutil.rmtree(self.cache_path)
-        
         #Extract book
         os.system("unzip -d "+self.cache_path+" \""+filepath+"\"")
         #Set permissions
         os.system("chmod 700 "+self.cache_path)
-        
         #Find opf file
         if os.path.exists(self.cache_path+"META-INF/container.xml"):
             container_data = xml2obj(open(self.cache_path+"META-INF/container.xml", "r"))
             opf_file_path = container_data.rootfiles.rootfile.full_path
-            
             #Load opf
             metadata = xml2obj(open(self.cache_path+opf_file_path, "r")) #Load metadata
             self.files = []
-            
             #Files
             for x in metadata.manifest.item:
                 if x.media_type == "application/xhtml+xml":
                      self.files.append(x.href)
-            self.oebps = os.path.split(opf_file_path)[0]
-                     
+            self.oebps = os.path.split(opf_file_path)[0]       
             #Calculate MD5 of book (for bookmarks)
             md5 = hashlib.md5()
             with open(filepath,'rb') as f: 
                 for chunk in iter(lambda: f.read(128*md5.block_size), ''): 
                     md5.update(chunk)
-            
             #Metadata
             self.book_name = metadata.metadata.dc_title
             self.book_author = metadata.metadata.dc_creator
             self.book_md5 = md5.hexdigest()
-            
             #Add book to config
             if not self.config.has_section(self.book_md5):
                 self.config.add_section(self.book_md5)
-                self.config.set(self.book_md5, "count", 0)
-                
+                self.config.set(self.book_md5, "count", 0) 
             #End of preparations
             self.ready = True
             return True
@@ -581,28 +559,24 @@ class ContentProvider(): #Manages book files and provides metadata
 class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
     def __init__(self, title, none, action, buttons, activate):
         super(OpenDialog, self).__init__(title, none, action, buttons)
-        
         #Prepare filters
         filter_pub = Gtk.FileFilter()
         filter_pub.set_name("EPub files")
         filter_pub.add_pattern("*.epub")
-        
         filter_all = Gtk.FileFilter()
         filter_all.set_name("All files")
         filter_all.add_pattern("*")
-        
+        #Add filters
         self.add_filter(filter_pub)
         self.add_filter(filter_all)
-        
         #Activation response
         self.activate = activate
-        
         #Prepare dialog
         self.set_default_response(Gtk.ResponseType.OK)
         self.connect("file-activated", self.activate)
         self.connect("response", self.respond)
         
-    def respond(self, widget, data=None):
+    def respond(self, widget, data=None): #Check response
         if data == (-5):
             self.activate(widget, data)
         else:
@@ -615,12 +589,12 @@ class JumpChapterDialog(Gtk.Dialog): #Chapters>Jump dialog
         label.show()
         self.vbox = self.get_content_area()
         self.vbox.pack_start(label, True, True, 0)
-        
+        #Create entry box
         self.entry = Gtk.Entry()
         self.entry.show()
         self.entry.connect("activate", self.on_dialog_enter)
         self.vbox.pack_start(self.entry, True, True, 0)
-        
+        #Add buttons
         self.add_button(Gtk.STOCK_OK, 0)
         self.add_button(Gtk.STOCK_CANCEL, 1)
         self.set_default_response(0)
@@ -628,7 +602,7 @@ class JumpChapterDialog(Gtk.Dialog): #Chapters>Jump dialog
     def get_text(self): #Returns text in entry box
         return self.entry.get_text()
     
-    def run(self):
+    def run(self): #Shows dialog
         answer = super(JumpChapterDialog, self).run()
         if answer == 0:
             if self.entry.get_text() != "":
@@ -653,43 +627,38 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         self.book_md5 = book_md5
         self.set_size_request(350, 250)
         self.activation_action = action
-        
         #Label
         label = Gtk.Label("Double click a bookmark to delete.")
         self.vbox.pack_start(label, False, False, 0)
-        
         #Scrollable Area
         self.scr_window = Gtk.ScrolledWindow()
         self.scr_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.scr_window.set_shadow_type(Gtk.ShadowType.ETCHED_IN)
         self.vbox.pack_end(self.scr_window, True, True, 0)
-        
         #Tree view
         self.refresh_tree()
-        
         #Buttons
         self.add_button(Gtk.STOCK_CLOSE, 0)
         self.set_default_response(0)
-        
+        #Show all these stuff
         self.vbox.show_all()
         
-    def refresh_tree(self, widget=None, data=None, row=None):
+    def refresh_tree(self, widget=None, data=None, row=None): #Refresh bookmarks view
         if widget != None:
             self.scr_window.remove(self.tree)
         store = self.create_model()
         self.tree = Gtk.TreeView(model=store)
         self.create_columns(self.tree)
-        
         self.tree.connect("row-activated", self.activation_action)
         self.tree.connect("row-activated", self.refresh_tree)
         self.tree.set_rules_hint(True)
-        
+        #Re-add control
         self.scr_window.add(self.tree)
         self.tree.show()
         
     def create_model(self): #Load data
         store = Gtk.ListStore(int, str)
-        
+        #Parse bookmarks from config
         count = int(self.config.get(self.book_md5, "count"))
         i = 0
         while i != count:
@@ -699,17 +668,18 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         return store
 
     def create_columns(self, tree_view): #Create columns for tree view
+        #Number column
         renderer_text = Gtk.CellRendererText()
         column = Gtk.TreeViewColumn("Number", renderer_text, text=0)
         column.set_sort_column_id(0)    
         tree_view.append_column(column)
-        
+        #Chapter column
         renderer_text = Gtk.CellRendererText()
         column = Gtk.TreeViewColumn("Chapter", renderer_text, text=1)
         column.set_sort_column_id(1)
         tree_view.append_column(column)
     
-    def run(self):
+    def run(self): #Show dialog
         answer = super(DeleteBookmarksDialog, self).run()
         if answer == 0 or answer == -4:
             self.destroy()
