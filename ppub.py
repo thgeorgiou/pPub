@@ -476,7 +476,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         elif data == 1:
             settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
         else:
-            settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
+            print self.config.get("Main", "usercss")
+            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")
         self.reload_chapter()
                         
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
