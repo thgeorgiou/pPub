@@ -118,6 +118,13 @@ class MainWindow: #Main window and it's magic
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
             self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        #Validate configuration
+        if not self.config.has_option("Main", "cacheDir"):
+            self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
+        if not self.config.has_option("Main", "js"):
+            self.config.set("Main", "js", "False")
+        if not self.config.has_option("Main", "caret"):
+            self.config.set("Main", "caret", "False")        
         ##Create UI
         #Window
         self.window = Gtk.Window()
@@ -142,50 +149,64 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #Container
         container = Gtk.VBox()
         self.window.add(container)
+        
         #Menu bar
         menubar = Gtk.MenuBar()
         container.pack_start(menubar, False, False, 0)
+        
         ##File Menu
         file_menu = Gtk.Menu()
+        
         #Create items
         menu_open = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_OPEN, None)
         file_menu_sep = Gtk.SeparatorMenuItem.new()
         file_menu_sep.set_sensitive(True)
         menu_exit = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT, None)
+        
         #Add them to menu
         file_menu.append(menu_open)
         file_menu.append(file_menu_sep)
         file_menu.append(menu_exit)
+        
         #Actions
         menu_open.connect("activate", self.on_open)
         menu_exit.connect("activate", self.on_exit)
+        
         #Accelerators
         menu_open.add_accelerator("activate", self.accel_group, ord("O"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
         menu_exit.add_accelerator("activate", self.accel_group, ord("Q"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
+        
         #Add menu to menubar
         file_m = Gtk.MenuItem(label="File")
         file_m.set_submenu(file_menu)
         menubar.append(file_m)
+        
         ##Chapter Menu
         go_menu = Gtk.Menu()
+        
         #Create items
         self.menu_next_ch = Gtk.MenuItem(label="Next Chapter")
         self.menu_prev_ch = Gtk.MenuItem(label="Previous Chapter")
         self.menu_jump_ch = Gtk.MenuItem(label="Jump to Chapter...")
+        
         #Add them to menu
         go_menu.append(self.menu_next_ch)
         go_menu.append(self.menu_prev_ch)
         go_menu.append(self.menu_jump_ch)
+        
         #Actions
         self.menu_next_ch.connect("activate", self.on_next_chapter)
         self.menu_prev_ch.connect("activate", self.on_prev_chapter)
-        self.menu_jump_ch.connect("activate", self.on_jump_chapter) 
+        self.menu_jump_ch.connect("activate", self.on_jump_chapter)
+        
         #Add menu to menubar
         go_m = Gtk.MenuItem(label="Go")
         go_m.set_submenu(go_menu)
         menubar.append(go_m)
+        
         ##View menu
         view_menu = Gtk.Menu()
+        
         #Create items
         self.menu_zoom_in = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_IN, None)
         self.menu_zoom_out = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ZOOM_OUT, None)
@@ -194,6 +215,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
+        
         #Add them to menu
         view_menu.append(self.menu_zoom_in)
         view_menu.append(self.menu_zoom_out)
@@ -201,69 +223,91 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
         view_menu.append(menu_enable_js)
+        
         #Actions
         self.menu_zoom_in.connect("activate", self.on_zoom_in)
         self.menu_zoom_out.connect("activate", self.on_zoom_out)
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
         menu_enable_js.connect("activate", self.on_toggle_js)
+        
         #Accelerators
         self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
         self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
+        
         #Add menu to menubar
         view_m = Gtk.MenuItem(label="View")
         view_m.set_submenu(view_menu)
         menubar.append(view_m)
+        
         ##Bookmarks Menu
         self.bookmarks_menu = Gtk.Menu()
         self.bookmarks = []
+        
         #Create items
         self.menu_add_bookmark = Gtk.MenuItem(label="Add Bookmark")
         self.menu_delete_bookmarks = Gtk.MenuItem(label="Delete Boomarks...")
         bookmarks_menu_sep = Gtk.SeparatorMenuItem.new()
+        
         #Add them to menu
         self.bookmarks_menu.append(self.menu_add_bookmark)
         self.bookmarks_menu.append(self.menu_delete_bookmarks)
         self.bookmarks_menu.append(bookmarks_menu_sep)
+        
         #Actions
         self.menu_add_bookmark.connect("activate", self.on_add_bookmark)
         self.menu_delete_bookmarks.connect("activate", self.on_delete_bookmarks)
+        
         #Accelerators
         self.menu_add_bookmark.add_accelerator("activate", self.accel_group, ord("B"), Gdk.ModifierType.CONTROL_MASK, Gtk.AccelFlags.VISIBLE)
+        
         #Add menu to menubar
         bookmarks_m = Gtk.MenuItem(label="Bookmarks")
         bookmarks_m.set_submenu(self.bookmarks_menu)
         menubar.append(bookmarks_m)
+        
         ##Help menu
         help_menu = Gtk.Menu()
+        
         #Create items
         menu_about = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_ABOUT, None)
+        
         #Add them to menu
         help_menu.append(menu_about)
+        
         #Actions
         menu_about.connect("activate", self.on_about)
+        
         #Add menu to menubar
         help_m = Gtk.MenuItem(label="Help")
         help_m.set_submenu(help_menu)
         menubar.append(help_m)
+        
         #Scrollable Window for Viewer
         self.scr_window = Gtk.ScrolledWindow()
         self.scr_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark)
         container.pack_end(self.scr_window, True, True, 0)
+        
         ##Viewer (pywebgtk)
         self.viewer = Viewer()
         self.viewer.load_uri("about:blank")
+        
         #Actions
         self.viewer.connect("key-press-event", self.on_keypress_viewer)
+        
         #Default option
         self.current_bookmark = 0
+        
         #Add to window
         self.scr_window.add(self.viewer)
+        
         #Show window
         self.window.show_all()
+        
         #Create a content provider
         self.provider = ContentProvider(self.config)
+        
         #Load settings from config
         settings = self.viewer.get_settings()
         if self.config.get("Main", "js") == "True":
@@ -274,6 +318,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             menu_enable_caret.set_active(True)
         else:
             menu_enable_caret.set_active(False)
+        
         #Check if there are any command line arguments
         if len(sys.argv) == 2:
             #Load book
@@ -415,12 +460,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         bookmark_id = data.get_indices()[0] + 1
         self.config.remove_option(self.provider.book_md5, str(bookmark_id)+"-ch")
         self.config.remove_option(self.provider.book_md5, str(bookmark_id)+"-pos")
+        
         #Rewrite all other bookmarks with correct numbering
         count = int(self.config.get(self.provider.book_md5, "count"))
         self.config.set(self.provider.book_md5, "count", count-1)
         old_data_ch = []
         old_data_pos = []
         i = 0
+        
         #Save all bookmarks in temporary space
         while i != count:
             i += 1
@@ -438,6 +485,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.config.set(self.provider.book_md5, str(i)+"-pos", old_data_pos[i-1])
         del old_data_ch
         del old_data_pos
+        
         #Update the menu
         self.update_bookmarks_menu()
         #Save config
@@ -485,6 +533,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.update_go_menu()
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
+            
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
             self.menu_jump_ch.set_sensitive(True)   
@@ -523,10 +572,12 @@ class ContentProvider(): #Manages book files and provides metadata
         #Clear any old files from the cache and extract the current book 
         if os.path.exists(self.cache_path):
             shutil.rmtree(self.cache_path)
+            
         #Extract book
         os.system("unzip -d "+self.cache_path+" \""+filepath+"\"")
         #Set permissions
         os.system("chmod 700 "+self.cache_path)
+        
         #Find opf file
         if os.path.exists(self.cache_path+"META-INF/container.xml"):
             container_data = xml2obj(open(self.cache_path+"META-INF/container.xml", "r"))
@@ -585,6 +636,7 @@ class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
         #Add filters
         self.add_filter(filter_pub)
         self.add_filter(filter_all)
+        
         #Activation response
         self.activate = activate
         #Prepare dialog
