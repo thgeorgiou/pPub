@@ -117,6 +117,7 @@ class MainWindow: #Main window and it's magic
             self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
+            self.config.set("Main", "usercss", "None")
             self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
         #Validate configuration
         if not self.config.has_option("Main", "cacheDir"):
@@ -124,7 +125,15 @@ class MainWindow: #Main window and it's magic
         if not self.config.has_option("Main", "js"):
             self.config.set("Main", "js", "False")
         if not self.config.has_option("Main", "caret"):
-            self.config.set("Main", "caret", "False")        
+            self.config.set("Main", "caret", "False")
+        if not self.config.has_option("Main", "usercss"):
+            self.config.set("Main", "usercss", "None")
+            self.user_css_path = self.config.get("Main", "usercss")
+        elif not os.path.exists(self.config.get("Main", "usercss")):
+            self.user_css_path = "None"
+        else:
+            self.user_css_path = self.config.get("Main", "usercss")
+        
         ##Create UI
         #Window
         self.window = Gtk.Window()
@@ -215,6 +224,32 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
+        menu_view_sep2 = Gtk.SeparatorMenuItem.new()
+        menu_view_styles = Gtk.MenuItem(label="Styles")
+
+        #Styles submenu
+        styles_menu = Gtk.Menu()
+        
+        menu_styles_default = Gtk.RadioMenuItem(label="Default")
+        menu_styles_night = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
+        menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
+        
+        menu_styles_default.set_active(True)
+        menu_styles_night.set_label("Night")
+        menu_styles_user.set_label("User")
+        if self.user_css_path == "None":
+            menu_styles_user.set_sensitive(False)
+        
+        styles_menu.append(menu_styles_default)
+        styles_menu.append(menu_styles_night)
+        styles_menu.append(menu_styles_user)
+        
+        #0=Def, 1=Night, 2=User
+        menu_styles_default.connect("toggled", self.on_change_style, 0)
+        menu_styles_night.connect("toggled", self.on_change_style, 1)
+        menu_styles_user.connect("toggled", self.on_change_style, 2)
+        
+        menu_view_styles.set_submenu(styles_menu)
         
         #Add them to menu
         view_menu.append(self.menu_zoom_in)
@@ -223,6 +258,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         view_menu.append(menu_view_sep)
         view_menu.append(menu_enable_caret)
         view_menu.append(menu_enable_js)
+        view_menu.append(menu_view_sep2)
+        view_menu.append(menu_view_styles)
         
         #Actions
         self.menu_zoom_in.connect("activate", self.on_zoom_in)
@@ -388,6 +425,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.bookmarks_menu.append(x)
             x.show()
             
+    def reload_chapter(self):
+        if self.provider.ready:
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
+            
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
         settings = self.viewer.get_settings()
@@ -426,10 +467,18 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     def on_toggle_js(self, widget, data=None): #Toggles javascript
         settings = self.viewer.get_settings()
         settings.props.enable_scripts = widget.get_active()
-        #Reload page if needed
-        if self.provider.ready:
-            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
-            
+        self.reload_chapter()
+    
+    def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
+        settings = self.viewer.get_settings()
+        if data == 0:
+            settings.props.user_stylesheet_uri = ""
+        elif data == 1:
+            settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
+        else:
+            settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
+        self.reload_chapter()
+                        
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
         md5_hash = self.provider.book_md5
         current_bookmark = int(self.config.get(md5_hash, "count"))+1
