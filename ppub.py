@@ -645,9 +645,15 @@ class ContentProvider(): #Manages book files and provides metadata
                 for chunk in iter(lambda: f.read(128*md5.block_size), ''): 
                     md5.update(chunk)
             #Metadata
-            self.book_name = metadata.metadata.dc_title
-            self.book_author = metadata.metadata.dc_creator
+            try:
+                self.book_name = metadata.metadata.dc_title
+                self.book_author = metadata.metadata.dc_creator
+            except UnicodeEncodeError:
+                self.book_name = "Unknown"
+                self.book_author = "Unknown"
+                print "Warning: Could not read book metadata."
             self.book_md5 = md5.hexdigest()
+            
             #Add book to config
             if not self.config.has_section(self.book_md5):
                 self.config.add_section(self.book_md5)
