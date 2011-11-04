@@ -108,6 +108,9 @@ class Bookmark(Gtk.MenuItem):
     
 class MainWindow: #Main window and it's magic
     def __init__(self):
+        #Set default encoding
+        #reload(sys)
+        #sys.setdefaultencoding("utf-8")
         #Load configuration
         self.config = ConfigParser.RawConfigParser()
         if os.path.exists(os.path.expanduser(os.path.join("~",".ppub.conf"))):
@@ -646,13 +649,8 @@ class ContentProvider(): #Manages book files and provides metadata
                 for chunk in iter(lambda: f.read(128*md5.block_size), ''): 
                     md5.update(chunk)
             #Metadata
-            try:
-                self.book_name = metadata.metadata.dc_title
-                self.book_author = metadata.metadata.dc_creator
-            except UnicodeEncodeError:
-                self.book_name = "Unknown"
-                self.book_author = "Unknown"
-                print "Warning: Could not read book metadata."
+            self.book_name = unicode(metadata.metadata.dc_title).encode("utf-8")
+            self.book_author = unicode(metadata.metadata.dc_creator).encode("utf-8")
             self.book_md5 = md5.hexdigest()
             
             #Add book to config
