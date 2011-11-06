@@ -100,12 +100,12 @@ def xml2obj(src): #Converts xml to an object
     else:
         xml.sax.parse(src, builder)
     return builder.root._attrs.values()[0]
-    
+
 class Bookmark(Gtk.MenuItem):
     def __init__(self, label, bookmark_id):
         Gtk.MenuItem.__init__(self, label=label)
         self.bookmark_id = bookmark_id
-    
+
 class MainWindow: #Main window and it's magic
     def __init__(self):
         #Set default encoding
@@ -149,7 +149,7 @@ class MainWindow: #Main window and it's magic
         #About Window
         self.about_dialog = Gtk.AboutDialog()
         self.about_dialog.set_program_name("pPub")
-        self.about_dialog.set_version("0.3")
+        self.about_dialog.set_version("0.4")
         self.about_dialog.set_copyright("by Thanasis Georgiou")
         self.about_dialog.set_license("""pPub is free software; you can redistribute it and/or modify it under the \nterms of the GNU General Public Licence as published by the Free Software Foundation.
 
@@ -280,6 +280,20 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         view_m.set_submenu(view_menu)
         menubar.append(view_m)
 
+        ##Contents Menu
+        self.empty_contents_menu = Gtk.Menu()
+
+        #Create items
+        self.contents_menu_placeholder = Gtk.MenuItem(label='No book loaded')
+        self.contents_menu_placeholder.set_sensitive(False)
+
+        self.empty_contents_menu.append(self.contents_menu_placeholder)
+
+        #Add to menubar
+        self.contents_m = Gtk.MenuItem(label="Contents")
+        self.contents_m.set_submenu(self.empty_contents_menu)
+        menubar.append(self.contents_m)
+
         ##Bookmarks Menu
         self.bookmarks_menu = Gtk.Menu()
         self.bookmarks = []
@@ -326,7 +340,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #Scrollable Window for Viewer
         self.scr_window = Gtk.ScrolledWindow()
         self.scr_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark)
+        self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark_scroll)
         container.pack_end(self.scr_window, True, True, 0)
 
         ##Viewer (pywebgtk)
@@ -335,6 +349,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
 
         #Actions
         self.viewer.connect("key-press-event", self.on_keypress_viewer)
+        self.viewer.connect("load-finished", self.check_current_bookmark_viewer)
 
         #Default option
         self.current_bookmark = 0
@@ -363,13 +378,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         if len(sys.argv) == 2:
             #Load book
             if self.provider.prepare_book(sys.argv[1]) == True:
-                self.viewer.load_uri("file://"+self.provider.get_chapter_file(0))
+                self.provider.current_chapter = 0
                 #Change window properties
                 self.update_go_menu()
                 self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
                 self.menu_jump_ch.set_sensitive(True)
                 self.enable_bookmark_menus()
                 self.update_bookmarks_menu()
+                self.update_contents_menu()
                 bookmarks_m.set_submenu(self.bookmarks_menu)
             else:
                 self.disable_menus()
@@ -382,10 +398,45 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.menu_jump_ch.set_sensitive(False)
         self.menu_add_bookmark.set_sensitive(False)
         self.menu_delete_bookmarks.set_sensitive(False)
+        self.contents_m.set_submenu(self.empty_contents_menu)
 
     def enable_bookmark_menus(self): #Enables bookmarks menu items
         self.menu_add_bookmark.set_sensitive(True)
         self.menu_delete_bookmarks.set_sensitive(True)
+
+    def update_contents_menu(self): #Updates content menu
+        if self.provider.ready:
+            titles = self.provider.titles
+            self.content_menu = Gtk.Menu()
+
+            base_item = Gtk.RadioMenuItem(label=titles[0])
+            base_item.connect("toggled", self.contents_menu_change, 0)
+            base_item.show()
+            self.content_menu.append(base_item)
+
+            #Set the corrent active item
+            if self.provider.current_chapter == 0:
+                base_item.set_active(True)
+                active_item = 0
+            else:
+                active_item = self.provider.current_chapter
+            i = 0
+            for x in titles:
+                if i == 0:
+                    i = 1
+                else:
+                    item = Gtk.RadioMenuItem.new_from_widget(base_item)
+                    item.set_label(x)
+                    item.connect("toggled", self.contents_menu_change, i)
+                    self.content_menu.append(item)
+
+                    if active_item == i:
+                        item.set_active(True)
+                    item.show()
+                    i += 1
+            self.contents_m.set_submenu(self.content_menu)
+        else:
+            self.contents_m.set_submenu(self.empty_contents_menu)
 
     def update_go_menu(self): #Updates go menu (disables and enables items)
         if self.provider.current_chapter == self.provider.get_chapter_count():
@@ -413,14 +464,15 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #Remove old bookmarks from menu
         for x in self.bookmarks:
             x.hide()
-            del x    
+            del x
         self.bookmarks = []
         #Load new ones
         count = int(self.config.get(self.provider.book_md5, "count"))
         i = 0
         while i != count:
             i += 1
-            x = Bookmark(str(i)+". Chapter "+str(self.config.get(self.provider.book_md5, str(i)+"-ch")), i)
+            chapter = int((self.config.get(self.provider.book_md5, str(i)+"-ch")))
+            x = Bookmark(str(i)+". "+self.provider.titles[chapter], i)
             x.connect("activate", self.on_open_bookmark)
             self.bookmarks.append(x)
         #Add them to menu
@@ -431,6 +483,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     def reload_chapter(self):
         if self.provider.ready:
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
+
+    def check_current_bookmark(self): #Scroll to bookmark if needed
+        if self.current_bookmark != 0 and self.check_current_bookmark_scroll and self.check_current_bookmark_viewer:
+            self.scr_window.get_vadjustment().set_value(self.current_bookmark)
+            self.current_bookmark = 0
+
+            self.bookmark_scroll_ready = False
+            self.bookmark_viewer_ready = False
 
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
@@ -444,12 +504,17 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         Gtk.main_quit()
 
     def on_next_chapter(self, widget, data=None): #View next chapter
-        self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter+1))
+        #Note: Not directly loading the next chapter because the radio items
+        #will update it on creation. Same applies for all
+        #chapter changing actions
+        self.provider.current_chapter = self.provider.current_chapter+1
         self.update_go_menu()
+        self.update_contents_menu()
 
     def on_prev_chapter(self, widget, data=None): #View prev. chapter
-        self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter-1))
+        self.provider.current_chapter = self.provider.current_chapter-1
         self.update_go_menu()
+        self.update_contents_menu()
 
     def on_zoom_in(self, widget, data=None): #Zooms in
         self.viewer.props.zoom_level = self.viewer.props.zoom_level + 0.1
@@ -471,6 +536,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         settings = self.viewer.get_settings()
         settings.props.enable_scripts = widget.get_active()
         self.reload_chapter()
+
+    def contents_menu_change(self, widget, data): #Change chapter according to selection
+        self.provider.current_chapter = data
+        self.viewer.load_uri("file://"+self.provider.get_chapter_file(data))
 
     def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
         settings = self.viewer.get_settings()
@@ -497,12 +566,18 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         pos = float(self.config.get(self.provider.book_md5, str(bookmark)+"-pos"))
         #Load current chapter
         self.current_bookmark = pos
-        self.viewer.load_uri("file://"+self.provider.get_chapter_file(chapter))
+        self.provider.current_chapter = chapter
+        self.update_go_menu()
+        self.update_contents_menu()
 
-    def check_current_bookmark(self, widget, data=None): #Scroll to bookmark if needed
-        if self.current_bookmark != 0:
-            self.scr_window.get_vadjustment().set_value(self.current_bookmark)
-            self.current_bookmark = 0
+    def check_current_bookmark_scroll(self, widget, data=None):
+        self.bookmark_scroll_ready = True
+        self.check_current_bookmark()
+
+    def check_current_bookmark_viewer(self, widget, data=None):
+        self.bookmark_viewer_ready = True
+        self.check_current_bookmark()
+        print "hi"
 
     def on_delete_bookmarks(self, widget, data=None): #Shows delete bookmarks dialog
         dialog = DeleteBookmarksDialog(self.config, self.provider.book_md5, self.dialog_bookmarks_activated)
@@ -545,7 +620,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
 
     def on_jump_chapter(self, widget, data=None): #Jump to given chapters
-        dialog = JumpChapterDialog()        
+        dialog = JumpChapterDialog()
         answer = dialog.run()
         #Check if answer is actually a chapter
         if answer == 0:
@@ -553,7 +628,9 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             dialog.destroy()
             #and act
             if input_data <= self.provider.get_chapter_count:
-                self.viewer.load_uri("file://"+self.provider.get_chapter_file(input_data))
+                self.provider.current_chapter = input_data
+                self.update_contents_menu()
+                self.update_go_menu()
             else:
                 error_dialog =  Gtk.MessageDialog(None, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK, "Invalid chapter number.")
                 error_dialog.run()
@@ -586,10 +663,11 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.update_go_menu()
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
+            self.update_contents_menu()
 
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
-            self.menu_jump_ch.set_sensitive(True)   
+            self.menu_jump_ch.set_sensitive(True)
         else:
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
@@ -635,14 +713,39 @@ class ContentProvider(): #Manages book files and provides metadata
         if os.path.exists(self.cache_path+"META-INF/container.xml"):
             container_data = xml2obj(open(self.cache_path+"META-INF/container.xml", "r"))
             opf_file_path = container_data.rootfiles.rootfile.full_path
+
             #Load opf
-            metadata = xml2obj(open(self.cache_path+opf_file_path, "r")) #Load metadata
-            self.files = []
-            #Files
-            for x in metadata.manifest.item:
-                if x.media_type == "application/xhtml+xml":
-                     self.files.append(x.href)
+            metadata = xml2obj(open(self.cache_path+opf_file_path, "r"))
             self.oebps = os.path.split(opf_file_path)[0]
+
+            #Find ncx file
+            for x in metadata.manifest.item:
+                #if x.media_type == "application/xhtml+xml":
+                #     self.files.append(x.href)
+                if x.id == "ncx":
+                    ncx_file_path = self.cache_path+"/"+self.oebps+"/"+x.href
+
+            #Load titles and filepaths
+            self.titles = []
+            self.files = []
+
+            #Parse ncx file
+            pat=re.compile('-(.*)-')
+            for line in open(ncx_file_path):
+                line=line.strip()
+                if "<text>" in line:
+                    out = line.replace("<text>", "")
+                    out = out.replace("</text>", "")
+                    out = out.replace("<content", "")
+                    self.titles.append(out)
+                if "<content" in line:
+                    out = line.replace("<content src=\"", "")
+                    out = out.replace("\"", "")
+                    out = out.replace("/>", "")
+                    self.files.append(out)
+            while not len(self.titles) == len(self.files):
+                self.titles.remove(self.titles[0])
+
             #Calculate MD5 of book (for bookmarks)
             md5 = hashlib.md5()
             with open(filepath,'rb') as f: 
@@ -657,7 +760,10 @@ class ContentProvider(): #Manages book files and provides metadata
             if not self.config.has_section(self.book_md5):
                 self.config.add_section(self.book_md5)
                 self.config.set(self.book_md5, "count", 0)
+
             #End of preparations
+            print self.files
+            print self.titles
             self.ready = True
             return True
         else: #Else show an error dialog
@@ -668,7 +774,7 @@ class ContentProvider(): #Manages book files and provides metadata
             return False
 
     def get_chapter_file(self, number): #Returns a chapter file
-        self.current_chapter = number
+        #self.current_chapter = number
         return self.cache_path+"/"+self.oebps+"/"+self.files[number]
 
     def get_chapter_count(self): #Returns number of chapters
