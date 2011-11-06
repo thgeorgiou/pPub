@@ -721,8 +721,6 @@ class ContentProvider(): #Manages book files and provides metadata
 
             #Find ncx file
             for x in metadata.manifest.item:
-                #if x.media_type == "application/xhtml+xml":
-                #     self.files.append(x.href)
                 if x.id == "ncx":
                     ncx_file_path = self.cache_path+"/"+self.oebps+"/"+x.href
 
@@ -746,6 +744,19 @@ class ContentProvider(): #Manages book files and provides metadata
                     self.files.append(out)
             while not len(self.titles) == len(self.files):
                 self.titles.remove(self.titles[0])
+
+            #Validate files
+            if not os.path.exists(self.cache_path+"/"+self.oebps+"/"+self.files[0]):
+                #Reload files
+                self.files = []
+                for x in metadata.manifest.item:
+                    if x.media_type == "application/xhtml+xml":
+                        self.files.append(x.href)
+                self.titles = []
+                i = 1
+                while not len(self.titles) == len(self.files):
+                    self.titles.append("Chapter "+str(i))
+                    i += 1
 
             #Calculate MD5 of book (for bookmarks)
             md5 = hashlib.md5()
