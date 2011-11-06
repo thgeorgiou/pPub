@@ -380,12 +380,12 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             if self.provider.prepare_book(sys.argv[1]) == True:
                 self.provider.current_chapter = 0
                 #Change window properties
-                self.update_go_menu()
                 self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
                 self.menu_jump_ch.set_sensitive(True)
                 self.enable_bookmark_menus()
                 self.update_bookmarks_menu()
                 self.update_contents_menu()
+                self.update_go_menu()
                 bookmarks_m.set_submenu(self.bookmarks_menu)
             else:
                 self.disable_menus()
@@ -508,13 +508,13 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #will update it on creation. Same applies for all
         #chapter changing actions
         self.provider.current_chapter = self.provider.current_chapter+1
-        self.update_go_menu()
         self.update_contents_menu()
+        self.update_go_menu()
 
     def on_prev_chapter(self, widget, data=None): #View prev. chapter
         self.provider.current_chapter = self.provider.current_chapter-1
-        self.update_go_menu()
         self.update_contents_menu()
+        self.update_go_menu()
 
     def on_zoom_in(self, widget, data=None): #Zooms in
         self.viewer.props.zoom_level = self.viewer.props.zoom_level + 0.1
@@ -568,8 +568,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         #Load current chapter
         self.current_bookmark = pos
         self.provider.current_chapter = chapter
-        self.update_go_menu()
         self.update_contents_menu()
+        self.update_go_menu()
 
     def check_current_bookmark_scroll(self, widget, data=None):
         self.bookmark_scroll_ready = True
@@ -659,11 +659,12 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         filename = widget.get_filename()
         widget.destroy()
         if self.provider.prepare_book(filename) == True:
+            self.provider.current_chapter = 0
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(0))
-            self.update_go_menu()
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
             self.update_contents_menu()
+            self.update_go_menu()
 
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
