@@ -1,4 +1,4 @@
-pPub 0.3 by Thanasis Georgiou <sakisds@gmx.com>
+pPub 0.4 by Thanasis Georgiou <sakisds@gmx.com>
 A simple epub reader written with pygtk and pywebkit.
 It's licenced under GPLv2, please look at the COPYING file.
 
