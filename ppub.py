@@ -538,8 +538,9 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.reload_chapter()
 
     def contents_menu_change(self, widget, data): #Change chapter according to selection
-        self.provider.current_chapter = data
-        self.viewer.load_uri("file://"+self.provider.get_chapter_file(data))
+        if widget.get_active():
+            self.provider.current_chapter = data
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(data))
 
     def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
         settings = self.viewer.get_settings()
@@ -577,7 +578,6 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     def check_current_bookmark_viewer(self, widget, data=None):
         self.bookmark_viewer_ready = True
         self.check_current_bookmark()
-        print "hi"
 
     def on_delete_bookmarks(self, widget, data=None): #Shows delete bookmarks dialog
         dialog = DeleteBookmarksDialog(self.config, self.provider.book_md5, self.dialog_bookmarks_activated)
