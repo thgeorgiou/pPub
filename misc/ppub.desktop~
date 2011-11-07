@@ -1,0 +1,12 @@
+[Desktop Entry]
+Categories=Office;Viewer;
+MimeType=application/epub+zip;
+Exec=ppub %U
+Icon=ppub
+StartupNotify=false
+Terminal=false
+Type=Application
+Name=pPub
+Name[fr]=pPub
+Comment=Simple epub ebbok reader
+Comment[fr]=Simple lecteur d'ebook au format epub
