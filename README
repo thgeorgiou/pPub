@@ -12,16 +12,23 @@ Depands on:
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
 
 Installation:
+-For archlinux: Install ppub from AUR.
+
+Manual Installation:
 -ppub.py should go in /usr/bin/
 -night.css, COPYING and README should go in /usr/share/ppub/
-I will add a setup.py soon to make installation easier.
+-Icons from /misc should go to /usr/share/icons/hicolor/<size>/apps
+-/misc/ppub.desktop should go to /usr/share/applications
+
 
 Bookmarks are matched with the MD5 hash of each book so they are valid even if you rename or move your books.
+
 
 Config options(~/.ppub.conf):
 -cachedir = Path to cache (default /tmp/ppub-cache-username/). Keep trailing /.
 -usercss = Path to user CSS. If it's set to 'None' or something that's not a path, User CSS will be disabled.
 
-Also note, the Night mode CSS is not perfect and many books could have themed elements that this CSS doesn't cover. You can help by sending the .css file inside that book, so I can add more elements to night.css
-
-In case you have a book that is not working, please extract your epub file like a zip and send me any .opf and .ncx files it has inside. I will do my best to fix the problem then :).
+Notes:
+-I will add a setup.py soon to make installation easier. Also, if anyone creates a package for another distro, please contact me so I can mention it here.
+-Also note, the Night mode CSS is not perfect and many books could have themed elements that this CSS doesn't cover. You can help by sending the .css file inside that book, so I can add more elements to night.css
+-In case you have a book that is not working, please extract your epub file like a zip and send me any .opf and .ncx files it has inside. I will do my best to fix the problem then :).
