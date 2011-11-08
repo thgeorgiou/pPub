@@ -9,7 +9,17 @@ Depands on:
 -WebKit GI binding
 -unzip
 
+Features:
+-Bookmarks use MD5 hashes of books so filenames and paths don't matter.
+-Keyboard shortcuts for navigation
+-Javascript support
+-Table on contents support
+-Support for some books that doesn't pass epubcheck, like files made with calibre.
+-Night mode and custom user CSS file.
+-And of course, lightweight.
+
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
+
 
 Installation:
 -For archlinux: Install ppub from AUR.
@@ -17,18 +27,17 @@ Installation:
 Manual Installation:
 -ppub.py should go in /usr/bin/
 -night.css, COPYING and README should go in /usr/share/ppub/
--Icons from /misc should go to /usr/share/icons/hicolor/<size>/apps
+-Icons from misc/ should go to /usr/share/icons/hicolor/<size>/apps
 -/misc/ppub.desktop should go to /usr/share/applications
+If you create a package for another distro, please send me a mail so I can mention it here.
+A setup.py will be created soon to make installation easier.
 
-
-Bookmarks are matched with the MD5 hash of each book so they are valid even if you rename or move your books.
-
-
-Config options(~/.ppub.conf):
+Configuration file(~/.ppub.conf):
 -cachedir = Path to cache (default /tmp/ppub-cache-username/). Keep trailing /.
 -usercss = Path to user CSS. If it's set to 'None' or something that's not a path, User CSS will be disabled.
+Note: Values outside the [Main] group should not be changed.
 
-Notes:
--I will add a setup.py soon to make installation easier. Also, if anyone creates a package for another distro, please contact me so I can mention it here.
--Also note, the Night mode CSS is not perfect and many books could have themed elements that this CSS doesn't cover. You can help by sending the .css file inside that book, so I can add more elements to night.css
+How to contribute:
+-Night mode's CSS is not perfect and many books could have themed elements that this CSS doesn't cover. You can help by sending the .css file inside that book, so I can add more elements to night.css
 -In case you have a book that is not working, please extract your epub file like a zip and send me any .opf and .ncx files it has inside. I will do my best to fix the problem then :).
+-Of course, feel free to fork this repository and add any features you want. You can mail me requests too.
