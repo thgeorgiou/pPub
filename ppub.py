@@ -108,12 +108,15 @@ class Bookmark(Gtk.MenuItem):
 
 class MainWindow: #Main window and it's magic
     def __init__(self):
-        #Set default encoding
-        #reload(sys)
-        #sys.setdefaultencoding("utf-8")
+        #Create Window
+        self.window = Gtk.Window()
+        self.window.set_default_size(800, 600)
+        self.window.set_title("pPub")
+        self.window.connect("destroy", self.on_exit)
+
         #Load configuration
         self.config = ConfigParser.RawConfigParser()
-        if os.path.exists(os.path.expanduser(os.path.join("~",".ppub.conf"))):
+        if os.access(os.path.expanduser(os.path.join("~",".ppub.conf")), os.W_OK):
             self.config.read(os.path.expanduser(os.path.join("~",".ppub.conf")))
         else:
             self.config.add_section("Main")
@@ -121,7 +124,14 @@ class MainWindow: #Main window and it's magic
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
             self.config.set("Main", "usercss", "None")
-            self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+            try:
+                self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+            except:
+                error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR,
+            Gtk.ButtonsType.OK, "Could not write configuration file.")
+                error_dialog.format_secondary_text("Make sure ~/.ppub is accessible and try again.")
+                error_dialog.run()
+                exit()
         #Validate configuration
         if not self.config.has_option("Main", "cacheDir"):
             self.config.set("Main", "cacheDir", "/tmp/ppub-cache-"+getpass.getuser()+"/")
@@ -129,20 +139,22 @@ class MainWindow: #Main window and it's magic
             self.config.set("Main", "js", "False")
         if not self.config.has_option("Main", "caret"):
             self.config.set("Main", "caret", "False")
+
         if not self.config.has_option("Main", "usercss"):
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
+        elif os.access(self.config.get("Main", "usercss"), os.R_OK):
+            self.user_css_path = self.config.get("Main", "usercss")
+        else:
+            self.config.set("Main", "usercss", "None")
+            self.user_css_path = self.config.get("Main", "usercss")
+
         elif not os.path.exists(self.config.get("Main", "usercss")):
             self.user_css_path = "None"
         else:
             self.user_css_path = self.config.get("Main", "usercss")
-        
+
         ##Create UI
-        #Window
-        self.window = Gtk.Window()
-        self.window.set_default_size(800, 600)
-        self.window.set_title("pPub")
-        self.window.connect("destroy", self.on_exit)
         # Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
@@ -361,7 +373,7 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         self.window.show_all()
 
         #Create a content provider
-        self.provider = ContentProvider(self.config)
+        self.provider = ContentProvider(self.config, self.window)
 
         #Load settings from config
         settings = self.viewer.get_settings()
@@ -497,7 +509,13 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         settings = self.viewer.get_settings()
         self.config.set("Main", "js", settings.props.enable_scripts)
         self.config.set("Main", "caret", settings.props.enable_caret_browsing)
-        self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        try:
+            self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        except:
+            error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Could not save configuration.")
+            error_dialog.format_secondary_text("Make sure ~/.ppub.conf is accessible and writable and try again. Configuration from this session will be saved to /tmp/ppub.conf.")
+            error_dialog.run()
+            self.config.write(open("/tmp/ppub.conf", "wb"))
         cache_dir = self.config.get("Main", "cacheDir")
         if os.path.exists(cache_dir):
             shutil.rmtree(cache_dir)
@@ -549,7 +567,6 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         elif data == 1:
             settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
         else:
-            print self.config.get("Main", "usercss")
             settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")
         self.reload_chapter()
 
@@ -627,12 +644,14 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             input_data = int(dialog.get_text())
             dialog.destroy()
             #and act
-            if input_data <= self.provider.get_chapter_count:
+            if input_data <= self.provider.get_chapter_count():
                 self.provider.current_chapter = input_data
                 self.update_contents_menu()
                 self.update_go_menu()
             else:
-                error_dialog =  Gtk.MessageDialog(None, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK, "Invalid chapter number.")
+                error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR,
+            Gtk.ButtonsType.OK, "Invalid chapter number.")
+                error_dialog.format_secondary_text("Make sure the chapter you are asking for exists and try again.")
                 error_dialog.run()
                 error_dialog.destroy()
         else:
@@ -683,7 +702,6 @@ class Viewer(WebKit.WebView): #Renders the book
         settings.props.enable_plugins = False
         settings.props.enable_page_cache = False
         settings.props.enable_java_applet = False
-        #settings.props.user_stylesheet_uri = "file://~/style.css"
         try:
             settings.props.enable_webgl = False
         except AttributeError:
@@ -692,7 +710,8 @@ class Viewer(WebKit.WebView): #Renders the book
         settings.props.enable_html5_local_storage = False
 
 class ContentProvider(): #Manages book files and provides metadata
-    def __init__(self, config):
+    def __init__(self, config, window):
+        self.window = window
         #Check if needed folder exists
         self.config = config
         self.cache_path = self.config.get("Main", "cacheDir")
@@ -706,7 +725,7 @@ class ContentProvider(): #Manages book files and provides metadata
             shutil.rmtree(self.cache_path)
 
         #Extract book
-        os.system("unzip -d "+self.cache_path+" \""+filepath+"\"")
+        os.system("unzip -d "+self.cache_path+" \""+filepath+"\" > /dev/null")
         #Set permissions
         os.system("chmod 700 "+self.cache_path)
 
@@ -728,22 +747,23 @@ class ContentProvider(): #Manages book files and provides metadata
             self.titles = []
             self.files = []
 
-            #Parse ncx file
-            pat=re.compile('-(.*)-')
-            for line in open(ncx_file_path):
-                line=line.strip()
-                if "<text>" in line:
-                    out = line.replace("<text>", "")
-                    out = out.replace("</text>", "")
-                    out = out.replace("<content", "")
-                    self.titles.append(out)
-                if "<content" in line:
-                    out = line.replace("<content src=\"", "")
-                    out = out.replace("\"", "")
-                    out = out.replace("/>", "")
-                    self.files.append(out)
-            while not len(self.titles) == len(self.files):
-                self.titles.remove(self.titles[0])
+            if os.access(ncx_file_path, os.R_OK):
+                #Parse ncx file
+                pat=re.compile('-(.*)-')
+                for line in open(ncx_file_path):
+                    line=line.strip()
+                    if "<text>" in line:
+                        out = line.replace("<text>", "")
+                        out = out.replace("</text>", "")
+                        out = out.replace("<content", "")
+                        self.titles.append(out)
+                    if "<content" in line:
+                        out = line.replace("<content src=\"", "")
+                        out = out.replace("\"", "")
+                        out = out.replace("/>", "")
+                        self.files.append(out)
+                while not len(self.titles) == len(self.files):
+                    self.titles.remove(self.titles[0])
 
             #Validate files
             if not os.path.exists(self.cache_path+"/"+self.oebps+"/"+self.files[0]):
@@ -774,12 +794,12 @@ class ContentProvider(): #Manages book files and provides metadata
                 self.config.set(self.book_md5, "count", 0)
 
             #End of preparations
-            print self.files
-            print self.titles
             self.ready = True
             return True
         else: #Else show an error dialog
-            error_dialog =  Gtk.MessageDialog(None, Gtk.DIALOG_MODAL, Gtk.MESSAGE_ERROR, Gtk.BUTTONS_OK, "Cannot open file.")
+            error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR,
+            Gtk.ButtonsType.OK, "Could not open book.")
+            error_dialog.format_secondary_text("Make sure the book you are trying to open is in supported format and try again.")
             error_dialog.run()
             error_dialog.destroy()
             self.ready = False
@@ -910,7 +930,7 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         #Number column
         renderer_text = Gtk.CellRendererText()
         column = Gtk.TreeViewColumn("Number", renderer_text, text=0)
-        column.set_sort_column_id(0)    
+        column.set_sort_column_id(0)
         tree_view.append_column(column)
         #Chapter column
         renderer_text = Gtk.CellRendererText()
