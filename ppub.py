@@ -22,6 +22,7 @@ import xml.sax.handler
 import ConfigParser
 import hashlib
 import getpass
+import zipfile
 
 def xml2obj(src): #Converts xml to an object
     non_id_char = re.compile('[^_0-9a-zA-Z]')
@@ -725,7 +726,7 @@ class ContentProvider(): #Manages book files and provides metadata
             shutil.rmtree(self.cache_path)
 
         #Extract book
-        os.system("unzip -d "+self.cache_path+" \""+filepath+"\" > /dev/null")
+        zipfile.ZipFile(filepath).extractall(path=self.cache_path)
         #Set permissions
         os.system("chmod 700 "+self.cache_path)
 
