@@ -7,7 +7,6 @@ Depands on:
 -pygobject (>= 2.21.4)
 -GTK+ GI binding
 -WebKit GI binding
--unzip
 
 Features:
 -Bookmarks use MD5 hashes of books so filenames and paths don't matter.
