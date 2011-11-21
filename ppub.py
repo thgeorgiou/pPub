@@ -149,11 +149,6 @@ class MainWindow: #Main window and it's magic
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
 
-        elif not os.path.exists(self.config.get("Main", "usercss")):
-            self.user_css_path = "None"
-        else:
-            self.user_css_path = self.config.get("Main", "usercss")
-
         ##Create UI
         # Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
