@@ -23,6 +23,7 @@ Sorry for the general lack of updated lately, I've been busy with school (and Sk
 
 Installation:
 -For archlinux: Install ppub from AUR.
+-For Salix (Thanks to fredg): slapt-src -i ppub
 
 Manual Installation:
 -ppub.py should go in /usr/bin/
