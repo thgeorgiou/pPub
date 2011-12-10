@@ -15,11 +15,12 @@ Features:
 -Table on contents support
 -Support for some books that doesn't pass epubcheck, like files made with calibre.
 -Night mode and custom user CSS file.
+-Some support for ebook-convert.
 -And of course, lightweight.
 
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
 
-Sorry for the general lack of updated lately, I've been busy with school (and Skyrim) and didn't find much time to work on this. But the project isn't abandoned.
+A note on the Import function, it's not finished yet, I still have to add a process dialog while ebook-convert is working and some other minor things but it's usable.
 
 Installation:
 -For archlinux: Install ppub from AUR.

@@ -110,10 +110,13 @@ class Bookmark(Gtk.MenuItem):
 class MainWindow: #Main window and it's magic
     def __init__(self):
         #Create Window
+        settingsgtk = Gtk.Settings()
+        settingsgtk.props.gtk_application_prefer_dark_theme = True
         self.window = Gtk.Window()
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
         self.window.connect("destroy", self.on_exit)
+
 
         #Load configuration
         self.config = ConfigParser.RawConfigParser()
@@ -179,17 +182,20 @@ You should have received a copy of the GNU General Public Licence along \nwith p
 
         #Create items
         menu_open = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_OPEN, None)
+        menu_import = Gtk.MenuItem(label="Import Book...")
         file_menu_sep = Gtk.SeparatorMenuItem.new()
         file_menu_sep.set_sensitive(True)
         menu_exit = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_QUIT, None)
 
         #Add them to menu
         file_menu.append(menu_open)
+        file_menu.append(menu_import)
         file_menu.append(file_menu_sep)
         file_menu.append(menu_exit)
 
         #Actions
         menu_open.connect("activate", self.on_open)
+        menu_import.connect("activate", self.on_import)
         menu_exit.connect("activate", self.on_exit)
 
         #Accelerators
@@ -200,6 +206,10 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         file_m = Gtk.MenuItem(label="File")
         file_m.set_submenu(file_menu)
         menubar.append(file_m)
+
+        #Disable import if ebook-convert is not installed
+        if not os.path.exists("/usr/bin/ebook-convert"):
+            menu_import.set_sensitive(False)
 
         ##Chapter Menu
         go_menu = Gtk.Menu()
@@ -666,8 +676,16 @@ You should have received a copy of the GNU General Public Licence along \nwith p
         elif keyval == "Left" and self.menu_prev_ch.get_sensitive():
             self.on_prev_chapter(widget)
 
+    def on_import(self, widget, data=None): #Show import dialog
+        info_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.INFO,
+            Gtk.ButtonsType.OK, "Import function is using ebook-convert to convert other formats to EPUB. Results may not be the best and some formatting may be lost.")
+        info_dialog.run()
+        info_dialog.destroy()
+        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
+        dialog.run()
+
     def on_open(self, widget, data=None): #Show open dialog
-        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.open_book)
+        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.open_book, 0)
         dialog.run()
 
     def open_book(self, widget=None, data=None): #Open book (from dialog)
@@ -689,6 +707,26 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.window.set_title("pPub")
             self.disable_menus()
 
+    def import_book(self, widget=None, data=None):
+        filename = widget.get_filename()
+        widget.destroy()
+        #Convert ebook
+        os.system("ebook-convert \""+filename+"\" /tmp/convert.epub --pretty-print")
+        if self.provider.prepare_book("/tmp/convert.epub") == True:
+            self.provider.current_chapter = 0
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(0))
+            self.enable_bookmark_menus()
+            self.update_bookmarks_menu()
+            self.update_contents_menu()
+            self.update_go_menu()
+
+            #Set window properties
+            self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
+            self.menu_jump_ch.set_sensitive(True)
+        else:
+            self.viewer.load_uri("about:blank")
+            self.window.set_title("pPub")
+            self.disable_menus()
 class Viewer(WebKit.WebView): #Renders the book
     def __init__(self):
         WebKit.WebView.__init__(self)
@@ -812,17 +850,18 @@ class ContentProvider(): #Manages book files and provides metadata
         return self.ready
 
 class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
-    def __init__(self, title, none, action, buttons, activate):
+    def __init__(self, title, none, action, buttons, activate, files):
         super(OpenDialog, self).__init__(title, none, action, buttons)
         #Prepare filters
-        filter_pub = Gtk.FileFilter()
-        filter_pub.set_name("EPub files")
-        filter_pub.add_pattern("*.epub")
+        if files == 0: #For open dialog only
+            filter_pub = Gtk.FileFilter()
+            filter_pub.set_name("EPub files")
+            filter_pub.add_pattern("*.epub")
+            self.add_filter(filter_pub)
+        #For all dialogs
         filter_all = Gtk.FileFilter()
         filter_all.set_name("All files")
         filter_all.add_pattern("*")
-        #Add filters
-        self.add_filter(filter_pub)
         self.add_filter(filter_all)
 
         #Activation response
