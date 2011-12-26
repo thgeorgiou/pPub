@@ -774,7 +774,7 @@ class ContentProvider(): #Manages book files and provides metadata
 
             #Find ncx file
             for x in metadata.manifest.item:
-                if x.id == "ncx":
+                if x.media_type == "application/x-dtbncx+xml":
                     ncx_file_path = self.cache_path+"/"+self.oebps+"/"+x.href
 
             #Load titles and filepaths
