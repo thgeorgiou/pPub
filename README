@@ -1,4 +1,4 @@
-pPub 0.4 by Thanasis Georgiou <sakisds@gmx.com>
+pPub 0.5 by Thanasis Georgiou <sakisds@gmx.com>
 A simple epub reader written with pygtk and pywebkit.
 It's licenced under GPLv2, please look at the COPYING file.
 
@@ -12,15 +12,13 @@ Features:
 -Bookmarks use MD5 hashes of books so filenames and paths don't matter.
 -Keyboard shortcuts for navigation
 -Javascript support
--Table on contents support
+-Table of contents support
 -Support for some books that doesn't pass epubcheck, like files made with calibre.
 -Night mode and custom user CSS file.
 -Some support for ebook-convert.
--And of course, lightweight.
+-Lightweight.
 
 A screenshot here: http://dl.dropbox.com/u/11392968/ppub.png
-
-A note on the Import function, it's not finished yet, I still have to add a process dialog while ebook-convert is working and some other minor things but it's usable.
 
 Installation:
 -For archlinux: Install ppub from AUR.

@@ -13,7 +13,7 @@
 # pPub; if not, write to the Free Software Foundation, Inc., 51 Franklin Street,
 # Fifth Floor, Boston, MA 02110-1301, USA.
 
-from gi.repository import Gdk, Gtk, WebKit
+from gi.repository import Gdk, Gtk, GObject, WebKit
 import os
 import shutil
 import sys
@@ -23,6 +23,7 @@ import ConfigParser
 import hashlib
 import getpass
 import zipfile
+import threading
 
 def xml2obj(src): #Converts xml to an object
     non_id_char = re.compile('[^_0-9a-zA-Z]')
@@ -677,10 +678,6 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.on_prev_chapter(widget)
 
     def on_import(self, widget, data=None): #Show import dialog
-        info_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.INFO,
-            Gtk.ButtonsType.OK, "Import function is using ebook-convert to convert other formats to EPUB. Results may not be the best and some formatting may be lost.")
-        info_dialog.run()
-        info_dialog.destroy()
         dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
         dialog.run()
 
@@ -710,7 +707,11 @@ You should have received a copy of the GNU General Public Licence along \nwith p
     def import_book(self, widget=None, data=None):
         filename = widget.get_filename()
         widget.destroy()
-        #Convert ebook
+        spinnerDialog = SpinnerDialog()
+        threading.Thread(target=self.bg_import_book, args=(filename,spinnerDialog)).start()
+        spinnerDialog.run()
+
+    def bg_import_book(self, filename, spinnerDialog):
         os.system("ebook-convert \""+filename+"\" /tmp/convert.epub --pretty-print")
         if self.provider.prepare_book("/tmp/convert.epub") == True:
             self.provider.current_chapter = 0
@@ -727,6 +728,8 @@ You should have received a copy of the GNU General Public Licence along \nwith p
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
             self.disable_menus()
+        spinnerDialog.destroy()
+
 class Viewer(WebKit.WebView): #Renders the book
     def __init__(self):
         WebKit.WebView.__init__(self)
@@ -882,7 +885,6 @@ class JumpChapterDialog(Gtk.Dialog): #Chapters>Jump dialog
         super(JumpChapterDialog, self).__init__()
         label = Gtk.Label("Enter chapter number:")
         label.show()
-        #self.vbox = self.get_content_area()
         self.vbox.pack_start(label, True, True, 0)
         #Create entry box
         self.entry = Gtk.Entry()
@@ -912,6 +914,24 @@ class JumpChapterDialog(Gtk.Dialog): #Chapters>Jump dialog
             self.response(0)
         else:
             self.response(1)
+
+class SpinnerDialog(Gtk.Dialog): #Convert book spinner
+    def __init__(self):
+        super(SpinnerDialog, self).__init__()
+        #Window options
+        self.set_resizable(False)
+        #Create container and objects
+        hbox = Gtk.HBox()
+        spinner = Gtk.Spinner()
+        label = Gtk.Label("Importing...")
+        #Start spinner and set size
+        spinner.start()
+        spinner.set_size_request(50,50)
+        #Add objects to containers
+        hbox.pack_start(spinner, True, True, 10)
+        hbox.pack_start(label, True, True, 10)
+        self.vbox.pack_start(hbox, True, True, 0)
+        self.vbox.show_all()
 
 class DeleteBookmarksDialog(Gtk.Dialog):
     def __init__(self, config, book_md5, action):
@@ -980,5 +1000,6 @@ class DeleteBookmarksDialog(Gtk.Dialog):
         else:
             self.activation_action(self)
 
+GObject.threads_init()
 main = MainWindow()
 Gtk.main()
