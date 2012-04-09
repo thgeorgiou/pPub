@@ -1,0 +1,3 @@
+#!/bin/bash
+#Installed by ppub. Read /usr/share/ppub/README.md
+/usr/share/ppub/ppub.py $1
