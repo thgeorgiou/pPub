@@ -86,11 +86,13 @@ class MainWindow: #Main window
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
         elif os.access(self.config.get("Main", "usercss"), os.R_OK):
-            self.user_css_path = self.config.get("Main", "usercss")
+            # Get dirname of file (should allow backwards compatibility)
+            self.user_css_path = os.path.dirname(self.config.get("Main", "usercss"))+'/'
         else:
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
-
+        # Set the changes if converting from a previous version.
+        self.config.set("Main", "usercss", self.user_css_path)
         #Create Widgets
         #Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
@@ -182,22 +184,25 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         styles_menu = Gtk.Menu()
         menu_styles_default = Gtk.RadioMenuItem(label="Default")
         menu_styles_night = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-        menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
         #Labels
         menu_styles_default.set_active(True)
         menu_styles_night.set_label("Night")
-        menu_styles_user.set_label("User")
-        #Disable user css option if there is no css file
-        if self.user_css_path == "None":
-            menu_styles_user.set_sensitive(False)
-        #Add to menu
         styles_menu.append(menu_styles_default)
         styles_menu.append(menu_styles_night)
-        styles_menu.append(menu_styles_user)
+        # Adds multiple userstyles from path.
+        if self.user_css_path != "None":
+            # Iterate through the directory
+            for stylesheet in os.listdir(self.config.get("Main", "usercss")):
+                # check if css file
+                if stylesheet[-4:].lower() == ".css":
+	                menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
+	                menu_styles_user.set_label(stylesheet[0:-4])
+	                styles_menu.append(menu_styles_user)
+	                menu_styles_user.connect("toggled", self.on_change_style, 2)
+        #Add to menu
         #Toggled event: 0=Def, 1=Night, 2=User
         menu_styles_default.connect("toggled", self.on_change_style, 0)
         menu_styles_night.connect("toggled", self.on_change_style, 1)
-        menu_styles_user.connect("toggled", self.on_change_style, 2)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -490,7 +495,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         elif data == 1:
             settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
         else:
-            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")
+            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
         self.reload_chapter()
 
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
