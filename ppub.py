@@ -441,17 +441,17 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             
     def reload_chapter(self):
         if self.provider.ready:
-            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
+            self.viewer.reload()
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
+        print "Check Book"
         if self.current_bookmark != 0 and self.check_current_bookmark_scroll and self.check_current_bookmark_viewer:
             self.scr_window.get_vadjustment().set_value(self.current_bookmark)
             if self.scr_window.get_vadjustment().get_value()!=0.0 and self.scr_window.get_vadjustment().get_value() != self.preload_book_scroll: 
                 self.current_bookmark = 0
                 self.preload_book_scroll = -1;
                 self.bookmark_scroll_ready = False
-                self.bookmark_viewer_ready = False
-
+                self.bookmark_viewer_ready = False               
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
         settings = self.viewer.get_settings()
