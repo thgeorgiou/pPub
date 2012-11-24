@@ -99,7 +99,7 @@ class ContentProvider(): #Manages book files and provides metadata
                 self.config.set(self.book_md5, "count", 0)
                 self.config.set(self.book_md5, "chapter", 0)
                 self.config.set(self.book_md5, "pos", 0.0)
-                self.config.set(self.book_md5, "stylesheet,"")
+                self.config.set(self.book_md5, "stylesheet","")
 
             #End of preparations
             self.ready = True
