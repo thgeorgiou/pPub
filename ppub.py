@@ -86,11 +86,13 @@ class MainWindow: #Main window
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
         elif os.access(self.config.get("Main", "usercss"), os.R_OK):
-            self.user_css_path = self.config.get("Main", "usercss")
+            # Get dirname of file (should allow backwards compatibility)
+            self.user_css_path = os.path.dirname(self.config.get("Main", "usercss"))+'/'
         else:
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
-
+        # Set the changes if converting from a previous version.
+        self.config.set("Main", "usercss", self.user_css_path)
         #Create Widgets
         #Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
@@ -182,22 +184,25 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         styles_menu = Gtk.Menu()
         menu_styles_default = Gtk.RadioMenuItem(label="Default")
         menu_styles_night = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-        menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
         #Labels
         menu_styles_default.set_active(True)
         menu_styles_night.set_label("Night")
-        menu_styles_user.set_label("User")
-        #Disable user css option if there is no css file
-        if self.user_css_path == "None":
-            menu_styles_user.set_sensitive(False)
-        #Add to menu
         styles_menu.append(menu_styles_default)
         styles_menu.append(menu_styles_night)
-        styles_menu.append(menu_styles_user)
+        # Adds multiple userstyles from path.
+        if self.user_css_path != "None":
+            # Iterate through the directory
+            for stylesheet in os.listdir(self.config.get("Main", "usercss")):
+                # check if css file
+                if stylesheet[-4:].lower() == ".css":
+	                menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
+	                menu_styles_user.set_label(stylesheet[0:-4])
+	                styles_menu.append(menu_styles_user)
+	                menu_styles_user.connect("toggled", self.on_change_style, 2)
+        #Add to menu
         #Toggled event: 0=Def, 1=Night, 2=User
         menu_styles_default.connect("toggled", self.on_change_style, 0)
         menu_styles_night.connect("toggled", self.on_change_style, 1)
-        menu_styles_user.connect("toggled", self.on_change_style, 2)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -399,9 +404,10 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
 
     def load_book(self, filename): #Extracts and prepares book
         if self.provider.prepare_book(filename) == True: #If book is ready
+            #Load chapter position
+            self.load_chapter_pos()
             #Open book on viewer
-            self.provider.current_chapter = 0
-            self.viewer.load_uri("file://"+self.provider.get_chapter_file(0))
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
             #Update menus
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
@@ -414,22 +420,41 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
             self.disable_menus()
-
+    
+    def load_chapter_pos(self):
+        self.provider.current_chapter = int(self.config.get(self.provider.book_md5, "chapter"))
+        pos = float(self.config.get(self.provider.book_md5, "pos"))
+        self.current_bookmark = pos
+        # Kind of a hack
+        self.check_current_bookmark_scroll = True
+        self.bookmark_viewer_ready = True
+        self.preload_book_scroll = self.scr_window.get_vadjustment().get_value()
+        settings = self.viewer.get_settings()
+        settings.props.user_stylesheet_uri = self.config.get(self.provider.book_md5, "stylesheet")
+        
+    def save_chapter_pos(self):
+        if hasattr(self.provider,'book_md5'):
+            self.config.set(self.provider.book_md5,"pos",self.scr_window.get_vadjustment().get_value())
+            self.config.set(self.provider.book_md5, "chapter", self.provider.current_chapter)
+            settings = self.viewer.get_settings()
+            self.config.set(self.provider.book_md5, "stylesheet", settings.props.user_stylesheet_uri )
+            
     def reload_chapter(self):
         if self.provider.ready:
-            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
+            self.viewer.reload()
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
         if self.current_bookmark != 0 and self.check_current_bookmark_scroll and self.check_current_bookmark_viewer:
             self.scr_window.get_vadjustment().set_value(self.current_bookmark)
-            self.current_bookmark = 0
-
-            self.bookmark_scroll_ready = False
-            self.bookmark_viewer_ready = False
-
+            if self.scr_window.get_vadjustment().get_value()!=0.0 and self.scr_window.get_vadjustment().get_value() != self.preload_book_scroll: 
+                self.current_bookmark = 0
+                self.preload_book_scroll = -1;
+                self.bookmark_scroll_ready = False
+                self.bookmark_viewer_ready = False               
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
         settings = self.viewer.get_settings()
+        self.save_chapter_pos()
         self.config.set("Main", "js", settings.props.enable_scripts)
         self.config.set("Main", "caret", settings.props.enable_caret_browsing)
         try:
@@ -490,7 +515,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         elif data == 1:
             settings.props.user_stylesheet_uri = "file:///usr/share/ppub/night.css"
         else:
-            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")
+            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
         self.reload_chapter()
 
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
@@ -604,6 +629,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
     def open_book(self, widget=None, data=None): #Open book (from dialog)
         filename = widget.get_filename()
         widget.destroy()
+        self.save_chapter_pos()
         self.load_book(filename)
 
     def import_book(self, widget=None, data=None):
