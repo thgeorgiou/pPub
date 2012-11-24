@@ -404,9 +404,10 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
 
     def load_book(self, filename): #Extracts and prepares book
         if self.provider.prepare_book(filename) == True: #If book is ready
+            #Load chapter position
+            self.load_chapter_pos()
             #Open book on viewer
-            self.provider.current_chapter = 0
-            self.viewer.load_uri("file://"+self.provider.get_chapter_file(0))
+            self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
             #Update menus
             self.enable_bookmark_menus()
             self.update_bookmarks_menu()
@@ -419,22 +420,44 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
             self.disable_menus()
-
+    
+    def load_chapter_pos(self):
+        self.provider.current_chapter = int(self.config.get(self.provider.book_md5, "chapter"))
+        pos = float(self.config.get(self.provider.book_md5, "pos"))
+        self.current_bookmark = pos
+        # Kind of a hack
+        self.check_current_bookmark_scroll = True
+        self.bookmark_viewer_ready = True
+        self.preload_book_scroll = self.scr_window.get_vadjustment().get_value()
+        settings = self.viewer.get_settings()
+        settings.props.user_stylesheet_uri = self.config.get(self.provider.book_md5, "stylesheet")
+        
+    def save_chapter_pos(self):
+        if hasattr(self.provider,'book_md5'):
+            self.config.set(self.provider.book_md5,"pos",self.scr_window.get_vadjustment().get_value())
+            self.config.set(self.provider.book_md5, "chapter", self.provider.current_chapter)
+            settings = self.viewer.get_settings()
+            self.config.set(self.provider.book_md5, "stylesheet", settings.props.user_stylesheet_uri )
+            
     def reload_chapter(self):
         if self.provider.ready:
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(self.provider.current_chapter))
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
+        print "check_current_bookmark"
         if self.current_bookmark != 0 and self.check_current_bookmark_scroll and self.check_current_bookmark_viewer:
+            print self.current_bookmark
             self.scr_window.get_vadjustment().set_value(self.current_bookmark)
-            self.current_bookmark = 0
-
-            self.bookmark_scroll_ready = False
-            self.bookmark_viewer_ready = False
+            if self.scr_window.get_vadjustment().get_value()!=0.0 and self.scr_window.get_vadjustment().get_value() != self.preload_book_scroll: 
+                self.current_bookmark = 0
+                self.preload_book_scroll = -1;
+                self.bookmark_scroll_ready = False
+                self.bookmark_viewer_ready = False
 
     ##Signals
     def on_exit(self, widget, data=None): #Clean cache and exit
         settings = self.viewer.get_settings()
+        self.save_chapter_pos()
         self.config.set("Main", "js", settings.props.enable_scripts)
         self.config.set("Main", "caret", settings.props.enable_caret_browsing)
         try:
@@ -609,6 +632,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
     def open_book(self, widget=None, data=None): #Open book (from dialog)
         filename = widget.get_filename()
         widget.destroy()
+        self.save_chapter_pos()
         self.load_book(filename)
 
     def import_book(self, widget=None, data=None):
