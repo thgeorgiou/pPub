@@ -444,7 +444,6 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.viewer.reload()
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
-        print "Check Book"
         if self.current_bookmark != 0 and self.check_current_bookmark_scroll and self.check_current_bookmark_viewer:
             self.scr_window.get_vadjustment().set_value(self.current_bookmark)
             if self.scr_window.get_vadjustment().get_value()!=0.0 and self.scr_window.get_vadjustment().get_value() != self.preload_book_scroll: 
