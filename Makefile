@@ -6,12 +6,13 @@ PYTHON ?= ${BINDIR}/python2
 all: ppub
 
 ppub:
+	sed 's|PREFIX|${PREFIX}|' ppub.py.in > ppub.py
 	echo "#!/bin/sh" > ppub
 	echo "${PYTHON} ${PPUBDIR}/ppub.py \"\$$@\"" >> ppub
 
 install: install-bin install-desktop
 
-install-bin:
+install-bin: ppub
 	install -d ${BINDIR}
 	install -d ${PPUBDIR}
 	install ppub ${BINDIR}
@@ -42,11 +43,15 @@ install-desktop:
 		${PREFIX}/share/applications/ppub.desktop
 
 clean:
-	rm ppub
+	rm -f ppub ppub.py
 
-uninstall:
+uninstall: uninstall-bin uninstall-desktop
+
+uninstall-bin:
 	rm -rf ${PPUBDIR}
 	rm -rf ${BINDIR}/ppub
+
+uninstall-desktop:
 	rm -f ${PREFIX}/share/applications/ppub.desktop
 	rm -f ${PREFIX}/share/icons/hicolor/*/apps/ppub.png
 
