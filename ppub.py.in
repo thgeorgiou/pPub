@@ -488,7 +488,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         if data == 0:
             settings.props.user_stylesheet_uri = ""
         elif data == 1:
-            settings.props.user_stylesheet_uri = "file://PREFIX/ppub/night.css"
+            settings.props.user_stylesheet_uri = "file://PREFIX/share/ppub/night.css"
         else:
             settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")
         self.reload_chapter()
