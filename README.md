@@ -1,6 +1,6 @@
-pPub 1.0
+pPub 1.1
 =========
-Version 1.0 by Thanasis Georgiou (sakisds.s@gmail.com)
+by Thanasis Georgiou (sakisds.s@gmail.com)
 
 Description
 -----------
