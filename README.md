@@ -51,5 +51,6 @@ Contributors:
 -ehainry (https://github.com/ehainry)
 -Laurent Bigonville (https://github.com/bigon)
 -Laurent Peuch (https://github.com/Psycojoker)
+-Dmitrij D. Czarkoff (https://github.com/czarkoff)
 
 Thanks for trying pPub out!
