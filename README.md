@@ -23,8 +23,16 @@ Here is a [screenshot](http://dl.dropbox.com/u/11392968/ppub.png).
 Installation
 ------------
 - For Archlinux: Install ppub from AUR.
-- For Salix: slapt-src -i ppub
-- For other distros: Place ppub inside /usr/bin and everything else inside /usr/share/ppub/. There are optional icons and .desktop files inside ./misc.
+- For Salix: slapt-src -i ppub (Probably not working anymore, if anyone can confirm notify me)
+- For other Linux distros and BSDs:
+
+    make install
+
+This command will install ppub under "/usr" prefix and configure it to invoke python 2.x via "/usr/bin/python2" command. To alter this behavior set PREFIX and PYTHON environment variables, eg.:
+
+    PREFIX=/usr/local PYTHON=`which python2.7` make install
+
+Also note, icons and desktop file are installed by default. If you want to install only the program itself, invoke make with "install-bin" target instead of "install".
 
 Configuration
 -------------
