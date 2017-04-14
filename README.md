@@ -4,6 +4,8 @@ Version 1.1 by Thanasis Georgiou (sakisds.s@gmail.com)
 
 Description
 -----------
+![screenshot](./ppub.png).
+
 pPub is a simple epub reader written in Python using GTK3 and WebKit. It has most features expected from a book reader and some support for ebook-convert. It's licenced under GPLv2.
 
 Features
@@ -17,13 +19,14 @@ Features
 - Support for files that don't pass epubcheck.
 - Lightweight.
 
-Here is a [screenshot](http://dl.dropbox.com/u/11392968/ppub.png).
-
-
 Installation
 ------------
 - For Archlinux: Install ppub from AUR.
 - For Salix: slapt-src -i ppub (Probably not working anymore, if anyone can confirm notify me)
+- For Ubuntu you should install Webkit dependeces:
+
+    apt-get install gir1.2-webkit-3.0
+
 - For other Linux distros and BSDs:
 
     make install
