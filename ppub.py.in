@@ -2,6 +2,7 @@
 
 # pPub by Thanasis Georgiou <sakisds@gmx.com>
 
+
 # pPub is free software; you can redistribute it and/or modify it under the terms
 # of the GNU General Public Licence as published by the Free Software Foundation.
 
@@ -183,26 +184,17 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         #Styles submenu
         styles_menu = Gtk.Menu()
         menu_styles_default = Gtk.RadioMenuItem(label="Default")
-        menu_styles_night = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-        #Labels
         menu_styles_default.set_active(True)
-        menu_styles_night.set_label("Night")
+        menu_styles_default.connect("toggled", self.on_change_style, "Default")
         styles_menu.append(menu_styles_default)
-        styles_menu.append(menu_styles_night)
-        # Adds multiple userstyles from path.
-        if self.user_css_path != "None":
-            # Iterate through the directory
-            for stylesheet in os.listdir(self.config.get("Main", "usercss")):
-                # check if css file
-                if stylesheet[-4:].lower() == ".css":
-	                menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-	                menu_styles_user.set_label(stylesheet[0:-4])
-	                styles_menu.append(menu_styles_user)
-	                menu_styles_user.connect("toggled", self.on_change_style, 2)
-        #Add to menu
-        #Toggled event: 0=Def, 1=Night, 2=User
-        menu_styles_default.connect("toggled", self.on_change_style, 0)
-        menu_styles_night.connect("toggled", self.on_change_style, 1)
+        for style in sorted(os.listdir("PREFIX/share/ppub/styles")):
+            style_name = os.path.basename(style)[:-4]
+            style_name = style_name[0].capitalize() + style_name[1:]
+            if 'Default' not in style_name:
+                menu_styles_custom = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
+                menu_styles_custom.set_label(style_name)
+                menu_styles_custom.connect("toggled", self.on_change_style, style_name)
+                styles_menu.append(menu_styles_custom)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -508,14 +500,20 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.provider.current_chapter = data
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(data))
 
-    def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
+    #def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
+    #    settings = self.viewer.get_settings()
+    #    if data == 0:
+    #        settings.props.user_stylesheet_uri = ""
+    #    elif data == 1:
+    #        settings.props.user_stylesheet_uri = "file://PREFIX/share/ppub/night.css"
+    #    else:
+    #        settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
+    #    self.reload_chapter()
+
+    def on_change_style(self, widget, name):
         settings = self.viewer.get_settings()
-        if data == 0:
-            settings.props.user_stylesheet_uri = ""
-        elif data == 1:
-            settings.props.user_stylesheet_uri = "file://PREFIX/share/ppub/night.css"
-        else:
-            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
+        css_uri = "file://PREFIX/share/ppub/styles/{0}.css".format(name.lower())
+        settings.props.user_stylesheet_uri = css_uri
         self.reload_chapter()
 
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark

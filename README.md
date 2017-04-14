@@ -4,7 +4,7 @@ Version 1.1 by Thanasis Georgiou (sakisds.s@gmail.com)
 
 Description
 -----------
-![screenshot](./ppub.png).
+![screenshot](./ppub.png)
 
 pPub is a simple epub reader written in Python using GTK3 and WebKit. It has most features expected from a book reader and some support for ebook-convert. It's licenced under GPLv2.
 
