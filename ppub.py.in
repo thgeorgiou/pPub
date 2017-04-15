@@ -426,6 +426,8 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
             self.menu_jump_ch.set_sensitive(True)
+            #Reset style
+            self.load_style(self.config.get("Main", "style"))
         else: #If book is not ready (error?) restore window to defaults
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
@@ -529,11 +531,14 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
     #        settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
     #    self.reload_chapter()
 
-    def on_change_style(self, widget, name):
+    def load_style(self, name):
         settings = self.viewer.get_settings()
-        self.config.set("Main", "style", name)
         css_uri = "file://PREFIX/share/ppub/styles/{0}.css".format(name.lower())
         settings.props.user_stylesheet_uri = css_uri
+
+    def on_change_style(self, widget, name):
+        self.config.set("Main", "style", name)
+        self.load_style(name)
         self.reload_chapter()
 
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
