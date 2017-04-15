@@ -53,19 +53,22 @@ class Viewer(WebKit.WebView): #Renders the book (webkit viewer)
         settings.props.enable_html5_local_storage = False
 
 class MainWindow: #Main window
+    CONFIG_PATH = os.path.expanduser("~/.ppub")
+
     def __init__(self):
+
         #Create Window
         settingsgtk = Gtk.Settings()
-
         settingsgtk.props.gtk_application_prefer_dark_theme = True
         self.window = Gtk.Window()
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
         self.window.connect("destroy", self.on_exit)
-
-        #Load configuration
+        #Load or create configuration
+        if not os.path.exists(self.CONFIG_PATH):
+            os.makedirs(self.CONFIG_PATH)
         self.config = ConfigParser.RawConfigParser()
-        config_path = os.path.expanduser(os.path.join("~",".ppub.conf"))
+        config_path = os.path.join(self.CONFIG_PATH,"ppub.conf")
         if os.access(config_path, os.W_OK): #If a config file exists...
             self.config.read(config_path) #...load it.
         else: #Else create a new one
@@ -75,13 +78,14 @@ class MainWindow: #Main window
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
             self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "style", "Default")
             try:
                 self.config.write(open(config_path, "wb"))
             except:
                 error_dialog = Gtk.MessageDialog(self.window, 0,
                                                  Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                                                  "Could not write configuration file.")
-                error_dialog.format_secondary_text("Make sure ~/.ppub is accessible and try again.")
+                error_dialog.format_secondary_text("Make sure {0} folder is accessible and try again.".format(self.CONFIG_PATH))
                 error_dialog.run()
                 exit()
         #Validate configuration
@@ -100,6 +104,8 @@ class MainWindow: #Main window
         else:
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
+        if not self.config.has_option("Main", "style"):
+            self.config.set("Main", "style", "Default")
         # Set the changes if converting from a previous version.
         self.config.set("Main", "usercss", self.user_css_path)
         #Create Widgets
@@ -128,6 +134,10 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         #Menu bar
         menubar = Gtk.MenuBar()
         container.pack_start(menubar, False, False, 0)
+
+        # Viewer (Webkit)
+        self.viewer = Viewer()
+        self.viewer.load_uri("about:blank")  # Display a blank page
 
         #File Menu
         file_menu = Gtk.Menu()
@@ -192,17 +202,19 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         #Styles submenu
         styles_menu = Gtk.Menu()
         menu_styles_default = Gtk.RadioMenuItem(label="Default")
-        menu_styles_default.set_active(True)
         menu_styles_default.connect("toggled", self.on_change_style, "Default")
+        if self.config.get("Main", "style") in "Default":
+            menu_styles_default.set_active(True)
         styles_menu.append(menu_styles_default)
         for style in sorted(os.listdir("PREFIX/share/ppub/styles")):
             style_name = os.path.basename(style)[:-4]
             style_name = style_name[0].capitalize() + style_name[1:]
             if 'Default' not in style_name:
-                menu_styles_custom = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-                menu_styles_custom.set_label(style_name)
+                menu_styles_custom = Gtk.RadioMenuItem(group=menu_styles_default, label=style_name)
                 menu_styles_custom.connect("toggled", self.on_change_style, style_name)
                 styles_menu.append(menu_styles_custom)
+                if self.config.get("Main", "style") in style_name:
+                    menu_styles_custom.set_active(True)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -280,9 +292,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark_scroll)
         container.pack_end(self.scr_window, True, True, 0)
 
-        #Viewer (Webkit)
-        self.viewer = Viewer()
-        self.viewer.load_uri("about:blank") #Display a blank page
+
         #Actions
         self.viewer.connect("key-press-event", self.on_keypress_viewer)
         self.viewer.connect("load-finished", self.check_current_bookmark_viewer)
@@ -440,7 +450,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.config.set(self.provider.book_md5, "stylesheet", settings.props.user_stylesheet_uri )
             
     def reload_chapter(self):
-        if self.provider.ready:
+        if hasattr(self, 'provide') and self.provider.ready:
             self.viewer.reload()
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
@@ -458,10 +468,11 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         self.config.set("Main", "js", settings.props.enable_scripts)
         self.config.set("Main", "caret", settings.props.enable_caret_browsing)
         try:
-            self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
-        except:
+            self.config.write(open(os.path.join(self.CONFIG_PATH,"ppub.conf"), "wb"))
+        except IOError as e:
+            print e.message
             error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Could not save configuration.")
-            error_dialog.format_secondary_text("Make sure ~/.ppub.conf is accessible and writable and try again. Configuration from this session will be saved to /tmp/ppub.conf.")
+            error_dialog.format_secondary_text("Make sure {0} is accessible and writable and try again. Configuration from this session will be saved to /tmp/ppub.conf.".format(self.CONFIG_PATH))
             error_dialog.run()
             self.config.write(open("/tmp/ppub.conf", "wb"))
         cache_dir = self.config.get("Main", "cacheDir")
@@ -520,6 +531,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
 
     def on_change_style(self, widget, name):
         settings = self.viewer.get_settings()
+        self.config.set("Main", "style", name)
         css_uri = "file://PREFIX/share/ppub/styles/{0}.css".format(name.lower())
         settings.props.user_stylesheet_uri = css_uri
         self.reload_chapter()
@@ -588,7 +600,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         #Update the menu
         self.update_bookmarks_menu()
         #Save config
-        self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        self.config.write(open(os.path.join(self.CONFIG_PATH,"ppub.conf")), "wb")
 
     def on_jump_chapter(self, widget, data=None): #Jump to given chapters
         dialog = JumpChapterDialog()
