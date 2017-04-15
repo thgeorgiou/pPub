@@ -20,9 +20,16 @@ import sys
 import ConfigParser
 import getpass
 import threading
+import gi
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+gi.require_version('WebKit', '3.0')
+
 from gi.repository import Gdk, Gtk, GObject, WebKit
 from dialogs import *
 from contentprovider import *
+
 
 class Bookmark(Gtk.MenuItem): #Bookmark storing object
     def __init__(self, label, bookmark_id):
@@ -49,6 +56,7 @@ class MainWindow: #Main window
     def __init__(self):
         #Create Window
         settingsgtk = Gtk.Settings()
+
         settingsgtk.props.gtk_application_prefer_dark_theme = True
         self.window = Gtk.Window()
         self.window.set_default_size(800, 600)
