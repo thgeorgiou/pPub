@@ -64,6 +64,7 @@ class MainWindow: #Main window
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
         self.window.connect("destroy", self.on_exit)
+        #self.window.connect('key_press_event', on_key_press_event)
         #Load or create configuration
         if not os.path.exists(self.CONFIG_PATH):
             os.makedirs(self.CONFIG_PATH)
@@ -196,6 +197,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
+        menu_enable_fullscreen = Gtk.CheckMenuItem(label="Fullscreen")
         menu_view_sep2 = Gtk.SeparatorMenuItem.new()
         menu_view_styles = Gtk.MenuItem(label="Styles")
 
@@ -223,8 +225,9 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         view_menu.append(self.menu_zoom_out)
         view_menu.append(menu_reset_zoom)
         view_menu.append(menu_view_sep)
-        view_menu.append(menu_enable_caret)
-        view_menu.append(menu_enable_js)
+        #view_menu.append(menu_enable_caret)
+        #view_menu.append(menu_enable_js)
+        view_menu.append(menu_enable_fullscreen)
         view_menu.append(menu_view_sep2)
         view_menu.append(menu_view_styles)
         #Actions
@@ -233,6 +236,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
         menu_enable_js.connect("activate", self.on_toggle_js)
+        menu_enable_fullscreen.connect("activate", self.on_toggle_fullscreen)
         #Accelerators
         self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
         self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
@@ -516,6 +520,14 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         settings.props.enable_scripts = widget.get_active()
         self.reload_chapter()
 
+    def on_toggle_fullscreen(self, widget, data=None): #Toggles the fullscreen mode
+        settings = self.viewer.get_settings()
+        if widget.get_active():
+            self.window.fullscreen()
+        else:
+            self.window.unfullscreen()
+        self.reload_chapter()
+
     def contents_menu_change(self, widget, data): #Change chapter according to selection
         if widget.get_active():
             self.provider.current_chapter = data
@@ -640,6 +652,8 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.on_next_chapter(widget)
         elif keyval == "Left" and self.menu_prev_ch.get_sensitive():
             self.on_prev_chapter(widget)
+        elif keyval == "Escape":
+            self.window.unfullscreen()
 
     def on_import(self, widget, data=None): #Show import dialog
         dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
