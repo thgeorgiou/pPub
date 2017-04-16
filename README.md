@@ -11,13 +11,14 @@ pPub is a simple epub reader written in Python using GTK3 and WebKit. It has mos
 Features
 --------
 - Bookmarks use MD5 hashes so filenames are irrelevant.
-- Keyboard shortcuts.
+- Keyboard shortcuts (arrows to move between chatpers, ESC to exit from fullscreen)
 - Table of contents support.
-- Night mode and custom user CSS support.
+- 5 preset visualization styles.
 - Javascript toggle.
 - Basic support for ebook-convert.
 - Support for files that don't pass epubcheck.
 - Lightweight.
+- Fullscreen mode
 
 Installation
 ------------
@@ -25,15 +26,15 @@ Installation
 - For Salix: slapt-src -i ppub (Probably not working anymore, if anyone can confirm notify me)
 - For Ubuntu you should install Webkit dependeces:
 
-    apt-get install gir1.2-webkit-3.0
+        apt-get install gir1.2-webkit-3.0
 
 - For other Linux distros and BSDs:
 
-    make install
+        make install
 
 This command will install ppub under "/usr" prefix and configure it to invoke python 2.x via "/usr/bin/python2" command. To alter this behavior set PREFIX and PYTHON environment variables, eg.:
-
-    PREFIX=/usr/local PYTHON=`which python2.7` make install
+        
+        PREFIX=/usr/local PYTHON=`which python2.7` make install
 
 Also note, icons and desktop file are installed by default. If you want to install only the program itself, invoke make with "install-bin" target instead of "install".
 
