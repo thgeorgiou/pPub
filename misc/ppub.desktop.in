@@ -2,7 +2,7 @@
 Categories=Office;Viewer;
 MimeType=application/epub+zip;
 Exec=ppub %U
-Icon=ppub
+Icon=PREFIX/share/icons/hicolor/scalable/apps/ppub.svg
 StartupNotify=false
 Terminal=false
 Type=Application

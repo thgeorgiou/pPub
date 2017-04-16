@@ -7,6 +7,7 @@ all: ppub
 
 ppub:
 	sed 's|PREFIX|${PREFIX}|' ppub.py.in > ppub.py
+	sed 's|PREFIX|${PREFIX}|' misc/ppub.desktop.in > misc/ppub.desktop
 	echo "#!/bin/sh" > ppub
 	echo "${PYTHON} ${PPUBDIR}/ppub.py \"\$$@\"" >> ppub
 
@@ -37,13 +38,18 @@ install-desktop:
 		${PREFIX}/share/icons/hicolor/48x48/apps/ppub.png
 	install -m644 misc/ppub-64.png \
 		${PREFIX}/share/icons/hicolor/64x64/apps/ppub.png
+	install -m644 misc/ppub-96.png \
+		${PREFIX}/share/icons/hicolor/96x96/apps/ppub.png
+	install -m644 misc/ppub-128.png \
+		${PREFIX}/share/icons/hicolor/128x128/apps/ppub.png
 	install -m644 misc/ppub-scalable.svg \
 		${PREFIX}/share/icons/hicolor/scalable/apps/ppub.svg
 	install -m644 misc/ppub.desktop \
 		${PREFIX}/share/applications/ppub.desktop
+
 	install -m 644 styles/*.css ${PPUBDIR}/styles/
 clean:
-	rm -f ppub ppub.py
+	rm -f ppub ppub.py misc/ppub.desktop
 
 uninstall: uninstall-bin uninstall-desktop
 

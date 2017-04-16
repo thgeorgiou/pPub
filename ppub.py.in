@@ -61,6 +61,7 @@ class MainWindow: #Main window
         settingsgtk = Gtk.Settings()
         settingsgtk.props.gtk_application_prefer_dark_theme = True
         self.window = Gtk.Window()
+        self.window.set_icon_from_file('PREFIX/share/icons/hicolor/128x128/apps/ppub.png')
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
         self.window.connect("destroy", self.on_exit)
