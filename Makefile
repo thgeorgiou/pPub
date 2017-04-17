@@ -48,6 +48,7 @@ install-desktop:
 		${PREFIX}/share/applications/ppub.desktop
 
 	install -m 644 styles/*.css ${PPUBDIR}/styles/
+	update-desktop-database ${PREFIX}/share/applications
 clean:
 	rm -f ppub ppub.py misc/ppub.desktop
 

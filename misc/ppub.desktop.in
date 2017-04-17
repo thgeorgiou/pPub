@@ -1,7 +1,8 @@
 [Desktop Entry]
-Categories=Office;Viewer;
+Categories=Office;Viewer;GTK
 MimeType=application/epub+zip;
 Exec=ppub %U
+Version=1.2
 Icon=PREFIX/share/icons/hicolor/scalable/apps/ppub.svg
 StartupNotify=false
 Terminal=false
@@ -9,6 +10,10 @@ Type=Application
 Name=pPub
 Name[fr]=pPub
 Name[gr]=pPub
+Name[pl]=pPub
+Name[es]=pPub
 Comment=Simple epub ebook reader
 Comment[fr]=Simple lecteur d'ebook au format epub
 Comment[gr]=Ένας απλώς αναγνώστης ebook (epub)
+Comment[pl]=Prosty czytnik ebooków
+Comment[pl]=Lector simple de libros electrónicos
