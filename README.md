@@ -1,6 +1,7 @@
-pPub 1.1
+pPub 1.2
 =========
-Version 1.1 by Thanasis Georgiou (sakisds.s@gmail.com)
+By Thanasis Georgiou (sakisds.s@gmail.com) and contributors.
+
 
 Description
 -----------
@@ -43,7 +44,7 @@ Configuration
 Most features can be configured from inside the application with these exceptions:
 - cachedir = Path to cache, default is /tmp/ppub-cache-username. If you change this, keep the trailing '/'.
 - usercss = Path to custom CSS folder. Each file in that folder will appear as a separate menu entry. If invalid or 'None', custom CSS is disabled.
-Config is saved at ~/.ppub.conf. Bookmarks are stored inside the same file.
+Config is saved at ~/.ppub/ppub.conf. Bookmarks are stored inside the same file.
 
 Help:
 -----------
@@ -56,5 +57,6 @@ Contributors:
 -Laurent Bigonville (https://github.com/bigon)
 -Laurent Peuch (https://github.com/Psycojoker)
 -Dmitrij D. Czarkoff (https://github.com/czarkoff)
+-Krzysztof Stopa (https://github.com/kstopa)
 
 Thanks for trying pPub out!
