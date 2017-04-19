@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 # pPub by Thanasis Georgiou <sakisds@gmx.com>
+# fork by Krzysztof Stopa (https://github.com/kstopa/)
 
 
 # pPub is free software; you can redistribute it and/or modify it under the terms
@@ -81,6 +82,7 @@ class MainWindow: #Main window
             self.config.set("Main", "caret", "False")
             self.config.set("Main", "usercss", "None")
             self.config.set("Main", "style", "Default")
+            self.config.set("Main", "default_folder", "./")
             try:
                 self.config.write(open(config_path, "wb"))
             except:
@@ -97,6 +99,8 @@ class MainWindow: #Main window
             self.config.set("Main", "js", "False")
         if not self.config.has_option("Main", "caret"):
             self.config.set("Main", "caret", "False")
+        if not self.config.has_option("Main", "default_folder"):
+            self.config.set("Main", "default_folder", "./")
         if not self.config.has_option("Main", "usercss"):
             self.config.set("Main", "usercss", "None")
             self.user_css_path = self.config.get("Main", "usercss")
@@ -117,8 +121,8 @@ class MainWindow: #Main window
         #About Window
         self.about_dialog = Gtk.AboutDialog()
         self.about_dialog.set_program_name("pPub")
-        self.about_dialog.set_version("1.1")
-        self.about_dialog.set_copyright("by Thanasis Georgiou")
+        self.about_dialog.set_version("1.2")
+        self.about_dialog.set_copyright("by Thanasis Georgiou and contributors")
         self.about_dialog.set_license("""pPub is free software; you can redistr\
 ibute it and/or modify it under the \nterms of the GNU General Public Licence a\
 s published by the Free Software Foundation.\n\npPub is distributed in the hope\
@@ -657,16 +661,19 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.window.unfullscreen()
 
     def on_import(self, widget, data=None): #Show import dialog
-        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
+        dialog = OpenDialog("Select book...", self.window, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
         dialog.run()
 
     def on_open(self, widget, data=None): #Show open dialog
-        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.open_book, 0)
+        dialog = OpenDialog("Select book...", self.window, Gtk.FileChooserAction.OPEN,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK),
+                            self.open_book, 0, self.config.get("Main", "default_folder"))
         dialog.run()
 
     def open_book(self, widget=None, data=None): #Open book (from dialog)
         filename = widget.get_filename()
         widget.destroy()
+        self.config.set("Main", "default_folder", os.path.dirname(filename))
         self.save_chapter_pos()
         self.load_book(filename)
 

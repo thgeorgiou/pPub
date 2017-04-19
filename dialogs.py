@@ -16,8 +16,8 @@
 from gi.repository import Gdk, Gtk
 
 class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
-    def __init__(self, title, none, action, buttons, activate, files):
-        super(OpenDialog, self).__init__(title, none, action, buttons)
+    def __init__(self, title, parent, action, buttons, activate, files, folder='./'):
+        super(OpenDialog, self).__init__(title, parent, action, buttons)
         #Prepare filters
         if files == 0: #For open dialog only
             filter_pub = Gtk.FileFilter()
@@ -32,6 +32,7 @@ class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
         #Activation response
         self.activate = activate
         #Prepare dialog
+        #self.set_current_folder(folder)
         self.set_default_response(Gtk.ResponseType.OK)
         self.connect("file-activated", self.activate)
         self.connect("response", self.respond)
