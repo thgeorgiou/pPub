@@ -118,22 +118,6 @@ class MainWindow: #Main window
         #Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
-        #About Window
-        self.about_dialog = Gtk.AboutDialog()
-        self.about_dialog.set_program_name("pPub")
-        self.about_dialog.set_version("1.2")
-        self.about_dialog.set_copyright("by Thanasis Georgiou and contributors")
-        self.about_dialog.set_license("""pPub is free software; you can redistr\
-ibute it and/or modify it under the \nterms of the GNU General Public Licence a\
-s published by the Free Software Foundation.\n\npPub is distributed in the hope\
-that it will be useful, but WITHOUT ANY WARRANTY; \nwithout even the implied wa\
-rranty of \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU G\
-eneral Public Licence for more details.\n\nYou should have received a copy of t\
-he GNU General Public Licence along \nwith pPub; if not, write to the Free Soft\
-ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
-, USA.  """)
-        self.about_dialog.connect("response", self.on_hide_about)
-
         #Container
         container = Gtk.VBox()
         self.window.add(container)
@@ -646,10 +630,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             dialog.destroy()
 
     def on_about(self, widget, data=None): #Show about screen
-        self.about_dialog.show()
-
-    def on_hide_about(self, widget, data=None): #Hide about screen
-        self.about_dialog.hide()
+        AboutPpubDialog().show()
 
     def on_keypress_viewer(self, widget, data): #Change chapters on right/left
         keyval = Gdk.keyval_name(data.keyval)
