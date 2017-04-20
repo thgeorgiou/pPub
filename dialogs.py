@@ -100,26 +100,31 @@ class SpinnerDialog(Gtk.Dialog): #Convert book spinner
         self.vbox.show_all()
 
 class AboutPpubDialog(Gtk.AboutDialog):
+
+    AUTHORS = [ "Thanasis Georgiou https://github.com/sakisds"
+                "Tristan Rice https://github.com/d4l3k",
+                "ehainry https://github.com/ehainry",
+                "Laurent Bigonville https://github.com/bigon",
+                "Laurent Peuch https://github.com/Psycojoker",
+                "Dmitrij D. Czarkoff https://github.com/czarkoff",
+                "Krzysztof Stopa https://github.com/kstopa"]
+
     def __init__(self):
         super(Gtk.AboutDialog, self).__init__()
         self.set_program_name("pPub")
         self.set_version("1.2")
-        self.set_copyright("by Thanasis Georgiou and contributors:\n\n\
-        - Tristan Rice (https://github.com/d4l3k)\n\
-        - ehainry (https://github.com/ehainry)\n\
-        - Laurent Bigonville (https://github.com/bigon)\n\
-        - Laurent Peuch (https://github.com/Psycojoker)\n\
-        - Dmitrij D. Czarkoff (https://github.com/czarkoff)\n\
-        - Krzysztof Stopa (https://github.com/kstopa))\n")
-        self.set_license("""pPub is free software; you can redistr\
-        ibute it and/or modify it under the \nterms of the GNU General Public Licence a\
-        s published by the Free Software Foundation.\n\npPub is distributed in the hope\
-        that it will be useful, but WITHOUT ANY WARRANTY; \nwithout even the implied wa\
-        rranty of \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU G\
-        eneral Public Licence for more details.\n\nYou should have received a copy of t\
-        he GNU General Public Licence along \nwith pPub; if not, write to the Free Soft\
-        ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
-        , USA.  """)
+        self.set_copyright("by Thanasis Georgiou and contributors.")
+        self.set_authors(self.AUTHORS)
+        self.set_license("""\
+        pPub is free software; you can redistribute it and/or modify it under the \n\
+        terms of the GNU General Public Licence as published by the Free Software Foundation.\n\n\
+        pPub is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \n\
+        without even the implied warranty of \n\
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public \n\
+        Licence for more details.\n\n
+        You should have received a copy of the GNU General Public Licence along with pPub; \n\
+        if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, \n\
+        Boston, MA 02110-1301 , USA.  """)
         self.connect("response", self.on_hide_about)
 
     def on_hide_about(self, widget, data=None): #Hide about screen
