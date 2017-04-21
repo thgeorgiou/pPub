@@ -109,12 +109,14 @@ class AboutPpubDialog(Gtk.AboutDialog):
                 "Dmitrij D. Czarkoff https://github.com/czarkoff",
                 "Krzysztof Stopa https://github.com/kstopa"]
 
-    def __init__(self):
+    def __init__(self, window=None):
         super(Gtk.AboutDialog, self).__init__()
+        self.set_transient_for(window)
         self.set_program_name("pPub")
         self.set_version("1.2")
         self.set_copyright("by Thanasis Georgiou and contributors.")
         self.set_authors(self.AUTHORS)
+        self.set_icon_name("ppub")
         self.set_license("""\
         pPub is free software; you can redistribute it and/or modify it under the \n\
         terms of the GNU General Public Licence as published by the Free Software Foundation.\n\n\

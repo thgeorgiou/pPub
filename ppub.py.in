@@ -630,7 +630,7 @@ class MainWindow: #Main window
             dialog.destroy()
 
     def on_about(self, widget, data=None): #Show about screen
-        AboutPpubDialog().show()
+        AboutPpubDialog(self.window).show()
 
     def on_keypress_viewer(self, widget, data): #Change chapters on right/left
         keyval = Gdk.keyval_name(data.keyval)
