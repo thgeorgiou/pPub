@@ -1,6 +1,8 @@
 #!/usr/bin/env python2
 
 # pPub by Thanasis Georgiou <sakisds@gmx.com>
+# fork by Krzysztof Stopa (https://github.com/kstopa/)
+
 
 # pPub is free software; you can redistribute it and/or modify it under the terms
 # of the GNU General Public Licence as published by the Free Software Foundation.
@@ -19,9 +21,16 @@ import sys
 import ConfigParser
 import getpass
 import threading
+import gi
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
+gi.require_version('WebKit', '3.0')
+
 from gi.repository import Gdk, Gtk, GObject, WebKit
 from dialogs import *
 from contentprovider import *
+
 
 class Bookmark(Gtk.MenuItem): #Bookmark storing object
     def __init__(self, label, bookmark_id):
@@ -45,18 +54,24 @@ class Viewer(WebKit.WebView): #Renders the book (webkit viewer)
         settings.props.enable_html5_local_storage = False
 
 class MainWindow: #Main window
+    CONFIG_PATH = os.path.expanduser("~/.ppub/")
+
     def __init__(self):
+
         #Create Window
         settingsgtk = Gtk.Settings()
         settingsgtk.props.gtk_application_prefer_dark_theme = True
         self.window = Gtk.Window()
+        self.window.set_icon_from_file('PREFIX/share/icons/hicolor/128x128/apps/ppub.png')
         self.window.set_default_size(800, 600)
         self.window.set_title("pPub")
         self.window.connect("destroy", self.on_exit)
-
-        #Load configuration
+        #self.window.connect('key_press_event', on_key_press_event)
+        #Load or create configuration
+        if not os.path.exists(self.CONFIG_PATH):
+            os.makedirs(self.CONFIG_PATH)
         self.config = ConfigParser.RawConfigParser()
-        config_path = os.path.expanduser(os.path.join("~",".ppub.conf"))
+        config_path = os.path.join(self.CONFIG_PATH,"ppub.conf")
         if os.access(config_path, os.W_OK): #If a config file exists...
             self.config.read(config_path) #...load it.
         else: #Else create a new one
@@ -65,14 +80,16 @@ class MainWindow: #Main window
                             "/tmp/ppub-cache-"+getpass.getuser()+"/")
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
+            self.config.set("Main", "style", "Default")
+            self.config.set("Main", "default_folder", "./")
             try:
                 self.config.write(open(config_path, "wb"))
             except:
                 error_dialog = Gtk.MessageDialog(self.window, 0,
                                                  Gtk.MessageType.ERROR, Gtk.ButtonsType.OK,
                                                  "Could not write configuration file.")
-                error_dialog.format_secondary_text("Make sure ~/.ppub is accessible and try again.")
+                error_dialog.format_secondary_text("Make sure {0} folder is accessible and try again.".format(self.CONFIG_PATH))
                 error_dialog.run()
                 exit()
         #Validate configuration
@@ -82,43 +99,32 @@ class MainWindow: #Main window
             self.config.set("Main", "js", "False")
         if not self.config.has_option("Main", "caret"):
             self.config.set("Main", "caret", "False")
+        if not self.config.has_option("Main", "default_folder"):
+            self.config.set("Main", "default_folder", "./")
         if not self.config.has_option("Main", "usercss"):
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
             self.user_css_path = self.config.get("Main", "usercss")
-        elif os.access(self.config.get("Main", "usercss"), os.R_OK):
-            # Get dirname of file (should allow backwards compatibility)
-            self.user_css_path = os.path.dirname(self.config.get("Main", "usercss"))+'/'
         else:
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
             self.user_css_path = self.config.get("Main", "usercss")
+        if not self.config.has_option("Main", "style"):
+            self.config.set("Main", "style", "Default")
         # Set the changes if converting from a previous version.
         self.config.set("Main", "usercss", self.user_css_path)
         #Create Widgets
         #Create an accelgroup
         self.accel_group = Gtk.AccelGroup()
         self.window.add_accel_group(self.accel_group)
-        #About Window
-        self.about_dialog = Gtk.AboutDialog()
-        self.about_dialog.set_program_name("pPub")
-        self.about_dialog.set_version("1.1")
-        self.about_dialog.set_copyright("by Thanasis Georgiou")
-        self.about_dialog.set_license("""pPub is free software; you can redistr\
-ibute it and/or modify it under the \nterms of the GNU General Public Licence a\
-s published by the Free Software Foundation.\n\npPub is distributed in the hope\
-that it will be useful, but WITHOUT ANY WARRANTY; \nwithout even the implied wa\
-rranty of \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU G\
-eneral Public Licence for more details.\n\nYou should have received a copy of t\
-he GNU General Public Licence along \nwith pPub; if not, write to the Free Soft\
-ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
-, USA.  """)
-        self.about_dialog.connect("response", self.on_hide_about)
-
         #Container
         container = Gtk.VBox()
         self.window.add(container)
         #Menu bar
         menubar = Gtk.MenuBar()
         container.pack_start(menubar, False, False, 0)
+
+        # Viewer (Webkit)
+        self.viewer = Viewer()
+        self.viewer.load_uri("about:blank")  # Display a blank page
 
         #File Menu
         file_menu = Gtk.Menu()
@@ -177,32 +183,21 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         menu_view_sep = Gtk.SeparatorMenuItem.new()
         menu_enable_caret = Gtk.CheckMenuItem(label="Caret")
         menu_enable_js = Gtk.CheckMenuItem(label="Javascript")
+        menu_enable_fullscreen = Gtk.CheckMenuItem(label="Fullscreen")
         menu_view_sep2 = Gtk.SeparatorMenuItem.new()
         menu_view_styles = Gtk.MenuItem(label="Styles")
 
         #Styles submenu
         styles_menu = Gtk.Menu()
         menu_styles_default = Gtk.RadioMenuItem(label="Default")
-        menu_styles_night = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-        #Labels
-        menu_styles_default.set_active(True)
-        menu_styles_night.set_label("Night")
+        menu_styles_default.connect("toggled", self.on_change_style, "Default")
+        if self.config.get("Main", "style") in "Default":
+            menu_styles_default.set_active(True)
         styles_menu.append(menu_styles_default)
-        styles_menu.append(menu_styles_night)
-        # Adds multiple userstyles from path.
-        if self.user_css_path != "None":
-            # Iterate through the directory
-            for stylesheet in os.listdir(self.config.get("Main", "usercss")):
-                # check if css file
-                if stylesheet[-4:].lower() == ".css":
-	                menu_styles_user = Gtk.RadioMenuItem.new_from_widget(menu_styles_default)
-	                menu_styles_user.set_label(stylesheet[0:-4])
-	                styles_menu.append(menu_styles_user)
-	                menu_styles_user.connect("toggled", self.on_change_style, 2)
-        #Add to menu
-        #Toggled event: 0=Def, 1=Night, 2=User
-        menu_styles_default.connect("toggled", self.on_change_style, 0)
-        menu_styles_night.connect("toggled", self.on_change_style, 1)
+        # Init app styles
+        self.init_styles("PREFIX/share/ppub/styles", styles_menu, menu_styles_default)
+        # Init user styles
+        self.init_styles(self.config.get("Main", "usercss"), styles_menu, menu_styles_default)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -211,8 +206,9 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         view_menu.append(self.menu_zoom_out)
         view_menu.append(menu_reset_zoom)
         view_menu.append(menu_view_sep)
-        view_menu.append(menu_enable_caret)
-        view_menu.append(menu_enable_js)
+        #view_menu.append(menu_enable_caret)
+        #view_menu.append(menu_enable_js)
+        view_menu.append(menu_enable_fullscreen)
         view_menu.append(menu_view_sep2)
         view_menu.append(menu_view_styles)
         #Actions
@@ -221,6 +217,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         menu_reset_zoom.connect("activate", self.on_reset_zoom)
         menu_enable_caret.connect("activate", self.on_toggle_caret)
         menu_enable_js.connect("activate", self.on_toggle_js)
+        menu_enable_fullscreen.connect("activate", self.on_toggle_fullscreen)
         #Accelerators
         self.menu_zoom_in.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Add")[0], Gtk.accelerator_parse("<Control>KP_Add")[1], Gtk.AccelFlags.VISIBLE)
         self.menu_zoom_out.add_accelerator("activate", self.accel_group, Gtk.accelerator_parse("<Control>KP_Subtract")[0], Gtk.accelerator_parse("<Control>KP_Subtract")[1], Gtk.AccelFlags.VISIBLE)
@@ -280,9 +277,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         self.scr_window.get_vscrollbar().connect("show", self.check_current_bookmark_scroll)
         container.pack_end(self.scr_window, True, True, 0)
 
-        #Viewer (Webkit)
-        self.viewer = Viewer()
-        self.viewer.load_uri("about:blank") #Display a blank page
+
         #Actions
         self.viewer.connect("key-press-event", self.on_keypress_viewer)
         self.viewer.connect("load-finished", self.check_current_bookmark_viewer)
@@ -313,6 +308,18 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.load_book(sys.argv[1])
         else:
             self.disable_menus()
+
+    def init_styles(self, path, styles_menu, menu_styles_default):
+        # TODO just load without setting the menu
+        for style in sorted(os.listdir(path)):
+            if style.endswith('.css') and 'default.css' not in style:
+                style_name = os.path.basename(style)[:-4]
+                style_name = style_name[0].capitalize() + style_name[1:]
+                menu_styles_custom = Gtk.RadioMenuItem(group=menu_styles_default, label=style_name)
+                menu_styles_custom.connect("toggled", self.on_change_style, style_name)
+                styles_menu.append(menu_styles_custom)
+                if self.config.get("Main", "style") in style_name:
+                    menu_styles_custom.set_active(True)
 
     def disable_menus(self): #Disables menus that should be active only while reading
         self.menu_next_ch.set_sensitive(False)
@@ -416,6 +423,8 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             #Set window properties
             self.window.set_title(str(self.provider.book_name)+" by "+str(self.provider.book_author))
             self.menu_jump_ch.set_sensitive(True)
+            #Reset style
+            self.load_style(self.config.get("Main", "style"))
         else: #If book is not ready (error?) restore window to defaults
             self.viewer.load_uri("about:blank")
             self.window.set_title("pPub")
@@ -440,7 +449,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.config.set(self.provider.book_md5, "stylesheet", settings.props.user_stylesheet_uri )
             
     def reload_chapter(self):
-        if self.provider.ready:
+        if hasattr(self, 'provide') and self.provider.ready:
             self.viewer.reload()
 
     def check_current_bookmark(self): #Scroll to bookmark if needed
@@ -458,10 +467,11 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         self.config.set("Main", "js", settings.props.enable_scripts)
         self.config.set("Main", "caret", settings.props.enable_caret_browsing)
         try:
-            self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
-        except:
+            self.config.write(open(os.path.join(self.CONFIG_PATH,"ppub.conf"), "wb"))
+        except IOError as e:
+            print e.message
             error_dialog = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK, "Could not save configuration.")
-            error_dialog.format_secondary_text("Make sure ~/.ppub.conf is accessible and writable and try again. Configuration from this session will be saved to /tmp/ppub.conf.")
+            error_dialog.format_secondary_text("Make sure {0} is accessible and writable and try again. Configuration from this session will be saved to /tmp/ppub.conf.".format(self.CONFIG_PATH))
             error_dialog.run()
             self.config.write(open("/tmp/ppub.conf", "wb"))
         cache_dir = self.config.get("Main", "cacheDir")
@@ -503,19 +513,41 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         settings.props.enable_scripts = widget.get_active()
         self.reload_chapter()
 
+    def on_toggle_fullscreen(self, widget, data=None): #Toggles the fullscreen mode
+        settings = self.viewer.get_settings()
+        if widget.get_active():
+            self.window.fullscreen()
+        else:
+            self.window.unfullscreen()
+        self.reload_chapter()
+
     def contents_menu_change(self, widget, data): #Change chapter according to selection
         if widget.get_active():
             self.provider.current_chapter = data
             self.viewer.load_uri("file://"+self.provider.get_chapter_file(data))
 
-    def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
+    #def on_change_style(self, widget, data): #0=Def, 1=Night, 2=User
+    #    settings = self.viewer.get_settings()
+    #    if data == 0:
+    #        settings.props.user_stylesheet_uri = ""
+    #    elif data == 1:
+    #        settings.props.user_stylesheet_uri = "file://PREFIX/share/ppub/night.css"
+    #    else:
+    #        settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
+    #    self.reload_chapter()
+
+    def load_style(self, name):
         settings = self.viewer.get_settings()
-        if data == 0:
-            settings.props.user_stylesheet_uri = ""
-        elif data == 1:
-            settings.props.user_stylesheet_uri = "file://PREFIX/share/ppub/night.css"
-        else:
-            settings.props.user_stylesheet_uri = "file://"+self.config.get("Main", "usercss")+"/"+widget.get_label()+".css"
+        css_name = "{0}.css".format(name.lower())
+        css_path = "PREFIX/share/ppub/styles/{0}".format(css_name)
+        if not os.path.exists(css_path):
+            css_path = os.path.join(self.config.get("Main", "usercss"), css_name)
+        css_uri = "file://{0}".format(css_path)
+        settings.props.user_stylesheet_uri = css_uri
+
+    def on_change_style(self, widget, name):
+        self.config.set("Main", "style", name)
+        self.load_style(name)
         self.reload_chapter()
 
     def on_add_bookmark(self, widget, data=None): #Adds a bookmark
@@ -582,7 +614,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
         #Update the menu
         self.update_bookmarks_menu()
         #Save config
-        self.config.write(open(os.path.expanduser(os.path.join("~",".ppub.conf")), "wb"))
+        self.config.write(open(os.path.join(self.CONFIG_PATH,"ppub.conf")), "wb")
 
     def on_jump_chapter(self, widget, data=None): #Jump to given chapters
         dialog = JumpChapterDialog()
@@ -606,10 +638,7 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             dialog.destroy()
 
     def on_about(self, widget, data=None): #Show about screen
-        self.about_dialog.show()
-
-    def on_hide_about(self, widget, data=None): #Hide about screen
-        self.about_dialog.hide()
+        AboutPpubDialog(self.window).show()
 
     def on_keypress_viewer(self, widget, data): #Change chapters on right/left
         keyval = Gdk.keyval_name(data.keyval)
@@ -617,18 +646,23 @@ ware Foundation, Inc., 51 Franklin Street, \nFifth Floor, Boston, MA 02110-1301\
             self.on_next_chapter(widget)
         elif keyval == "Left" and self.menu_prev_ch.get_sensitive():
             self.on_prev_chapter(widget)
+        elif keyval == "Escape":
+            self.window.unfullscreen()
 
     def on_import(self, widget, data=None): #Show import dialog
-        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
+        dialog = OpenDialog("Select book...", self.window, Gtk.FileChooserAction.OPEN,(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.import_book, 1)
         dialog.run()
 
     def on_open(self, widget, data=None): #Show open dialog
-        dialog = OpenDialog("Select book...", None, Gtk.FileChooserAction.OPEN, (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK), self.open_book, 0)
+        dialog = OpenDialog("Select book...", self.window, Gtk.FileChooserAction.OPEN,
+                            (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, Gtk.STOCK_OPEN, Gtk.ResponseType.OK),
+                            self.open_book, 0, self.config.get("Main", "default_folder"))
         dialog.run()
 
     def open_book(self, widget=None, data=None): #Open book (from dialog)
         filename = widget.get_filename()
         widget.destroy()
+        self.config.set("Main", "default_folder", os.path.dirname(filename))
         self.save_chapter_pos()
         self.load_book(filename)
 

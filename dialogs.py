@@ -16,8 +16,8 @@
 from gi.repository import Gdk, Gtk
 
 class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
-    def __init__(self, title, none, action, buttons, activate, files):
-        super(OpenDialog, self).__init__(title, none, action, buttons)
+    def __init__(self, title, parent, action, buttons, activate, files, folder='./'):
+        super(OpenDialog, self).__init__(title, parent, action, buttons)
         #Prepare filters
         if files == 0: #For open dialog only
             filter_pub = Gtk.FileFilter()
@@ -32,6 +32,7 @@ class OpenDialog(Gtk.FileChooserDialog): #File>Open dialog
         #Activation response
         self.activate = activate
         #Prepare dialog
+        #self.set_current_folder(folder)
         self.set_default_response(Gtk.ResponseType.OK)
         self.connect("file-activated", self.activate)
         self.connect("response", self.respond)
@@ -97,6 +98,39 @@ class SpinnerDialog(Gtk.Dialog): #Convert book spinner
         hbox.pack_start(label, True, True, 10)
         self.vbox.pack_start(hbox, True, True, 0)
         self.vbox.show_all()
+
+class AboutPpubDialog(Gtk.AboutDialog):
+
+    AUTHORS = [ "Thanasis Georgiou https://github.com/sakisds"
+                "Tristan Rice https://github.com/d4l3k",
+                "ehainry https://github.com/ehainry",
+                "Laurent Bigonville https://github.com/bigon",
+                "Laurent Peuch https://github.com/Psycojoker",
+                "Dmitrij D. Czarkoff https://github.com/czarkoff",
+                "Krzysztof Stopa https://github.com/kstopa"]
+
+    def __init__(self, window=None):
+        super(Gtk.AboutDialog, self).__init__()
+        self.set_transient_for(window)
+        self.set_program_name("pPub")
+        self.set_version("1.2")
+        self.set_copyright("by Thanasis Georgiou and contributors.")
+        self.set_authors(self.AUTHORS)
+        self.set_icon_name("ppub")
+        self.set_license("""\
+        pPub is free software; you can redistribute it and/or modify it under the \n\
+        terms of the GNU General Public Licence as published by the Free Software Foundation.\n\n\
+        pPub is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; \n\
+        without even the implied warranty of \n\
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public \n\
+        Licence for more details.\n\n
+        You should have received a copy of the GNU General Public Licence along with pPub; \n\
+        if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, \n\
+        Boston, MA 02110-1301 , USA.  """)
+        self.connect("response", self.on_hide_about)
+
+    def on_hide_about(self, widget, data=None): #Hide about screen
+        self.hide()
 
 class DeleteBookmarksDialog(Gtk.Dialog):
     def __init__(self, config, book_md5, action):

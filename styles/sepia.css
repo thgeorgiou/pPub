@@ -1,0 +1,30 @@
+body{
+color: #3a1b00 !important;
+background: #ffebd9 !important;
+margin: 5em !important;
+}
+
+@media screen and (min-width: 1400px) {
+    body {
+        margin-left: 15% !important;
+        margin-right: 15% !important;
+    }
+}
+
+@media screen and (min-width: 1600px) {
+    body {
+        margin-left: 20% !important;
+        margin-right: 20% !important;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    body {
+        margin-left: 30% !important;
+        margin-right: 30% !important;
+    }
+}
+
+a {
+    color: #291300 !important;
+}
