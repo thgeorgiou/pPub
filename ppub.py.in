@@ -54,7 +54,7 @@ class Viewer(WebKit.WebView): #Renders the book (webkit viewer)
         settings.props.enable_html5_local_storage = False
 
 class MainWindow: #Main window
-    CONFIG_PATH = os.path.expanduser("~/.ppub")
+    CONFIG_PATH = os.path.expanduser("~/.ppub/")
 
     def __init__(self):
 
@@ -80,7 +80,7 @@ class MainWindow: #Main window
                             "/tmp/ppub-cache-"+getpass.getuser()+"/")
             self.config.set("Main", "js", "False")
             self.config.set("Main", "caret", "False")
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
             self.config.set("Main", "style", "Default")
             self.config.set("Main", "default_folder", "./")
             try:
@@ -102,13 +102,10 @@ class MainWindow: #Main window
         if not self.config.has_option("Main", "default_folder"):
             self.config.set("Main", "default_folder", "./")
         if not self.config.has_option("Main", "usercss"):
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
             self.user_css_path = self.config.get("Main", "usercss")
-        elif os.access(self.config.get("Main", "usercss"), os.R_OK):
-            # Get dirname of file (should allow backwards compatibility)
-            self.user_css_path = os.path.dirname(self.config.get("Main", "usercss"))+'/'
         else:
-            self.config.set("Main", "usercss", "None")
+            self.config.set("Main", "usercss", self.CONFIG_PATH)
             self.user_css_path = self.config.get("Main", "usercss")
         if not self.config.has_option("Main", "style"):
             self.config.set("Main", "style", "Default")
@@ -197,15 +194,10 @@ class MainWindow: #Main window
         if self.config.get("Main", "style") in "Default":
             menu_styles_default.set_active(True)
         styles_menu.append(menu_styles_default)
-        for style in sorted(os.listdir("PREFIX/share/ppub/styles")):
-            style_name = os.path.basename(style)[:-4]
-            style_name = style_name[0].capitalize() + style_name[1:]
-            if 'Default' not in style_name:
-                menu_styles_custom = Gtk.RadioMenuItem(group=menu_styles_default, label=style_name)
-                menu_styles_custom.connect("toggled", self.on_change_style, style_name)
-                styles_menu.append(menu_styles_custom)
-                if self.config.get("Main", "style") in style_name:
-                    menu_styles_custom.set_active(True)
+        # Init app styles
+        self.init_styles("PREFIX/share/ppub/styles", styles_menu, menu_styles_default)
+        # Init user styles
+        self.init_styles(self.config.get("Main", "usercss"), styles_menu, menu_styles_default)
 
         #Set submenu
         menu_view_styles.set_submenu(styles_menu)
@@ -316,6 +308,18 @@ class MainWindow: #Main window
             self.load_book(sys.argv[1])
         else:
             self.disable_menus()
+
+    def init_styles(self, path, styles_menu, menu_styles_default):
+        # TODO just load without setting the menu
+        for style in sorted(os.listdir(path)):
+            if style.endswith('.css') and 'default.css' not in style:
+                style_name = os.path.basename(style)[:-4]
+                style_name = style_name[0].capitalize() + style_name[1:]
+                menu_styles_custom = Gtk.RadioMenuItem(group=menu_styles_default, label=style_name)
+                menu_styles_custom.connect("toggled", self.on_change_style, style_name)
+                styles_menu.append(menu_styles_custom)
+                if self.config.get("Main", "style") in style_name:
+                    menu_styles_custom.set_active(True)
 
     def disable_menus(self): #Disables menus that should be active only while reading
         self.menu_next_ch.set_sensitive(False)
@@ -534,7 +538,11 @@ class MainWindow: #Main window
 
     def load_style(self, name):
         settings = self.viewer.get_settings()
-        css_uri = "file://PREFIX/share/ppub/styles/{0}.css".format(name.lower())
+        css_name = "{0}.css".format(name.lower())
+        css_path = "PREFIX/share/ppub/styles/{0}".format(css_name)
+        if not os.path.exists(css_path):
+            css_path = os.path.join(self.config.get("Main", "usercss"), css_name)
+        css_uri = "file://{0}".format(css_path)
         settings.props.user_stylesheet_uri = css_uri
 
     def on_change_style(self, widget, name):
