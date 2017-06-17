@@ -17,7 +17,7 @@ Features
 - Support for files that don't pass epubcheck.
 - Lightweight.
 
-Here is a [screenshot](http://dl.dropbox.com/u/11392968/ppub.png).
+Here is a [screenshot](https://web.archive.org/web/20141220215155/https://dl.dropboxusercontent.com/u/11392968/ppub.png).
 
 
 Installation
